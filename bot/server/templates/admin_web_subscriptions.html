@@ -1,0 +1,627 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Web Publisher Subscriptions - Admin{% endblock %}
+{% block mobile_title %}Web Subscriptions{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <div>
+            <h1 class="hidden lg:block text-3xl font-bold text-gray-800">Web Publisher Subscriptions</h1>
+            <p class="text-gray-600 text-sm mt-1">Manage subscription plans for publisher video uploads on web</p>
+        </div>
+        
+        <div class="flex items-center gap-4 mt-4 lg:mt-0">
+            <div class="flex items-center gap-3 bg-white rounded-xl shadow-lg px-4 py-3">
+                <span class="text-sm font-semibold text-gray-700">Web Subscriptions</span>
+                <button id="toggle-subscriptions" onclick="toggleWebSubscriptions()" class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 {% if web_subscriptions_enabled %}bg-purple-500{% else %}bg-gray-300{% endif %}">
+                    <span class="{% if web_subscriptions_enabled %}translate-x-6{% else %}translate-x-1{% endif %} inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-200"></span>
+                </button>
+                <span id="toggle-status" class="text-sm font-semibold {% if web_subscriptions_enabled %}text-purple-600{% else %}text-gray-500{% endif %}">{% if web_subscriptions_enabled %}ON{% else %}OFF{% endif %}</span>
+            </div>
+            <button onclick="openAddPlanModal()" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span class="hidden sm:inline">Add Plan</span>
+            </button>
+        </div>
+    </div>
+    
+    <div id="message-container" class="mb-6 hidden">
+        <div id="message-alert" class="rounded-2xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <svg id="message-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                <span id="message-text" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    {% if not web_subscriptions_enabled %}
+    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+                <p class="font-semibold text-yellow-800">Web Publisher Subscriptions are currently disabled</p>
+                <p class="text-sm text-yellow-700 mt-1">Turn ON subscriptions using the toggle above to require publishers to subscribe for video uploads</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Available Plans</h2>
+        <div id="plans-container" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% if plans %}
+                {% for plan in plans %}
+                <div class="bg-gradient-to-br {% if plan.is_active %}from-purple-500 to-indigo-600{% else %}from-gray-400 to-gray-500{% endif %} rounded-2xl shadow-lg p-6 text-white relative">
+                    {% if not plan.is_active %}
+                    <div class="absolute top-2 left-2">
+                        <span class="px-2 py-1 text-xs font-semibold bg-gray-700 text-white rounded-full">Inactive</span>
+                    </div>
+                    {% endif %}
+                    <div class="absolute top-4 right-4 flex gap-2">
+                        <button onclick="togglePlan({{ plan.id }}, '{{ plan.name }}')" class="text-white hover:text-yellow-200 transition" title="{% if plan.is_active %}Deactivate{% else %}Activate{% endif %}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M{% if plan.is_active %}18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636{% else %}9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z{% endif %}"></path>
+                            </svg>
+                        </button>
+                        <button onclick="deletePlan({{ plan.id }}, '{{ plan.name }}')" class="text-white hover:text-red-200 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mb-4 mt-4">
+                        <h3 class="text-xl font-bold mb-2">{{ plan.name }}</h3>
+                        {% if plan.description %}
+                        <p class="text-purple-100 text-sm">{{ plan.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-3xl font-bold">₹{{ plan.amount }}</p>
+                        <p class="text-purple-100">for {{ plan.duration_days }} days</p>
+                    </div>
+                    <div class="text-sm text-purple-100 space-y-1">
+                        <p>Uploads: Unlimited (Monthly)</p>
+                        <p>Max File Size: {{ plan.max_file_size_mb }} MB</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="col-span-full text-center py-12 bg-white rounded-2xl shadow-lg">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <p class="text-gray-500 text-lg">No web subscription plans yet</p>
+                <p class="text-gray-400 text-sm mt-2">Click "Add Plan" to create your first web subscription plan</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Grant Web Subscription
+        </h2>
+        <form id="grant-subscription-form" class="flex flex-col md:flex-row gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="flex-1">
+                <input type="email" name="publisher_email" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="Publisher Email">
+            </div>
+            <div class="flex-1">
+                <select name="plan_id" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                    <option value="">Select Plan</option>
+                    {% for plan in plans %}
+                    {% if plan.is_active %}
+                    <option value="{{ plan.id }}">{{ plan.name }} - ₹{{ plan.amount }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition duration-200">
+                Grant Subscription
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Subscription History
+        </h2>
+        
+        {% if subscriptions_data %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Publisher</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Plan</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Duration</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Expires</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for sub, publisher in subscriptions_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-800">{{ publisher.email if publisher else 'N/A' }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800">{{ sub.plan_name }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 font-semibold">₹{{ sub.amount }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800">{{ sub.duration_days }} days</td>
+                        <td class="px-4 py-3">
+                            {% if sub.status == 'completed' %}
+                            <span class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Active</span>
+                            {% elif sub.status == 'pending' %}
+                            <span class="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Pending</span>
+                            {% elif sub.status == 'cancelled' %}
+                            <span class="px-3 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">Cancelled</span>
+                            {% else %}
+                            <span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">{{ sub.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600">
+                            {% if sub.expires_at %}
+                            {{ sub.expires_at.strftime('%Y-%m-%d') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <button onclick="viewSubscription({{ sub.id }})" class="text-purple-600 hover:text-purple-800 transition" title="View Details">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                                {% if sub.status == 'completed' %}
+                                <button onclick="openExtendModal({{ sub.id }}, '{{ publisher.email if publisher else 'N/A' }}')" class="text-green-600 hover:text-green-800 transition" title="Extend Subscription">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="cancelSubscription({{ sub.id }}, '{{ publisher.email if publisher else 'N/A' }}')" class="text-red-600 hover:text-red-800 transition" title="Cancel Subscription">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-gray-500 text-lg">No web subscriptions yet</p>
+            <p class="text-gray-400 text-sm mt-2">Publishers need to subscribe to upload videos</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="add-plan-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold">Add Web Subscription Plan</h3>
+                <button onclick="closeAddPlanModal()" class="text-white hover:text-gray-200 transition duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <form id="add-plan-form" class="p-6 space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Plan Name *</label>
+                <input type="text" name="name" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="e.g., Basic Upload Plan">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Amount (₹) *</label>
+                <input type="number" name="amount" step="0.01" min="1" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="e.g., 199">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Duration (days) *</label>
+                <input type="number" name="duration_days" min="1" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="e.g., 30">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Max File Size (MB)</label>
+                <input type="number" name="max_file_size_mb" min="1" value="2048" class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="e.g., 2048">
+                <p class="text-xs text-gray-500 mt-1">Maximum file size per upload in megabytes</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea name="description" rows="3" class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="Optional description"></textarea>
+            </div>
+            
+            <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold py-3 px-4 rounded-xl hover:shadow-lg transition duration-200">
+                Add Plan
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="extend-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold">Extend Subscription</h3>
+                <button onclick="closeExtendModal()" class="text-white hover:text-gray-200 transition duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <p class="text-green-100 text-sm mt-2" id="extend-publisher-email"></p>
+        </div>
+        
+        <form id="extend-form" class="p-6 space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="subscription_id" id="extend-subscription-id">
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Extension Days *</label>
+                <input type="number" name="extend_days" min="1" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:outline-none" placeholder="e.g., 30">
+                <p class="text-xs text-gray-500 mt-1">Number of days to add to the subscription</p>
+            </div>
+            
+            <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-3 px-4 rounded-xl hover:shadow-lg transition duration-200">
+                Extend Subscription
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="view-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4">
+        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold">Subscription Details</h3>
+                <button onclick="closeViewModal()" class="text-white hover:text-gray-200 transition duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div id="view-loading" class="text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Loading details...</p>
+            </div>
+            <div id="view-content" class="hidden space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Publisher</p>
+                        <p class="font-semibold text-gray-800" id="view-email"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Plan</p>
+                        <p class="font-semibold text-gray-800" id="view-plan"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Amount</p>
+                        <p class="font-semibold text-gray-800" id="view-amount"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Duration</p>
+                        <p class="font-semibold text-gray-800" id="view-duration"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Status</p>
+                        <p class="font-semibold" id="view-status"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Payment Method</p>
+                        <p class="font-semibold text-gray-800" id="view-method"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Order ID</p>
+                        <p class="font-semibold text-gray-800 text-sm" id="view-order"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">UTR Number</p>
+                        <p class="font-semibold text-gray-800 text-sm" id="view-utr"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Expires At</p>
+                        <p class="font-semibold text-gray-800" id="view-expires"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <p class="text-xs text-gray-500 uppercase">Created At</p>
+                        <p class="font-semibold text-gray-800" id="view-created"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleWebSubscriptions() {
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch('/admin/web-subscriptions/toggle', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to toggle subscriptions', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+function openAddPlanModal() {
+    document.getElementById('add-plan-modal').style.display = 'flex';
+    document.getElementById('add-plan-form').reset();
+}
+
+function closeAddPlanModal() {
+    document.getElementById('add-plan-modal').style.display = 'none';
+}
+
+document.getElementById('add-plan-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/web-subscriptions/plans/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            closeAddPlanModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to add plan', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+});
+
+function togglePlan(planId, planName) {
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch(`/admin/web-subscriptions/plans/${planId}/toggle`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to toggle plan', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+function deletePlan(planId, planName) {
+    if (!confirm(`Are you sure you want to delete "${planName}"?`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch(`/admin/web-subscriptions/plans/${planId}/delete`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to delete plan', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+document.getElementById('grant-subscription-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/admin/web-subscriptions/grant', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to grant subscription', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+});
+
+function showMessage(message, type) {
+    const container = document.getElementById('message-container');
+    const alert = document.getElementById('message-alert');
+    const text = document.getElementById('message-text');
+    const icon = document.getElementById('message-icon');
+    
+    container.classList.remove('hidden');
+    text.textContent = message;
+    
+    if (type === 'success') {
+        alert.className = 'rounded-2xl p-4 shadow-lg bg-green-100 text-green-800';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+    } else {
+        alert.className = 'rounded-2xl p-4 shadow-lg bg-red-100 text-red-800';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+    }
+    
+    setTimeout(() => {
+        container.classList.add('hidden');
+    }, 5000);
+}
+
+function openExtendModal(subscriptionId, publisherEmail) {
+    document.getElementById('extend-subscription-id').value = subscriptionId;
+    document.getElementById('extend-publisher-email').textContent = 'Publisher: ' + publisherEmail;
+    document.getElementById('extend-modal').style.display = 'flex';
+    document.getElementById('extend-form').reset();
+    document.getElementById('extend-subscription-id').value = subscriptionId;
+}
+
+function closeExtendModal() {
+    document.getElementById('extend-modal').style.display = 'none';
+}
+
+document.getElementById('extend-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const subscriptionId = document.getElementById('extend-subscription-id').value;
+    const formData = new FormData(this);
+    
+    fetch(`/admin/web-subscriptions/${subscriptionId}/extend`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            closeExtendModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to extend subscription', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+});
+
+function cancelSubscription(subscriptionId, publisherEmail) {
+    if (!confirm(`Are you sure you want to cancel the subscription for "${publisherEmail}"? This will immediately revoke their access.`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch(`/admin/web-subscriptions/${subscriptionId}/cancel`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showMessage(data.message || 'Failed to cancel subscription', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+function viewSubscription(subscriptionId) {
+    document.getElementById('view-modal').style.display = 'flex';
+    document.getElementById('view-loading').classList.remove('hidden');
+    document.getElementById('view-content').classList.add('hidden');
+    
+    fetch(`/admin/web-subscriptions/${subscriptionId}/details`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const sub = data.subscription;
+            document.getElementById('view-email').textContent = sub.publisher_email;
+            document.getElementById('view-plan').textContent = sub.plan_name;
+            document.getElementById('view-amount').textContent = '₹' + sub.amount;
+            document.getElementById('view-duration').textContent = sub.duration_days + ' days';
+            
+            const statusEl = document.getElementById('view-status');
+            if (sub.status === 'completed') {
+                statusEl.textContent = 'Active';
+                statusEl.className = 'font-semibold text-green-600';
+            } else if (sub.status === 'cancelled') {
+                statusEl.textContent = 'Cancelled';
+                statusEl.className = 'font-semibold text-red-600';
+            } else {
+                statusEl.textContent = sub.status.charAt(0).toUpperCase() + sub.status.slice(1);
+                statusEl.className = 'font-semibold text-yellow-600';
+            }
+            
+            document.getElementById('view-method').textContent = sub.payment_method || '-';
+            document.getElementById('view-order').textContent = sub.order_id || '-';
+            document.getElementById('view-utr').textContent = sub.utr_number || '-';
+            document.getElementById('view-expires').textContent = sub.expires_at || '-';
+            document.getElementById('view-created').textContent = sub.created_at || '-';
+            
+            document.getElementById('view-loading').classList.add('hidden');
+            document.getElementById('view-content').classList.remove('hidden');
+        } else {
+            closeViewModal();
+            showMessage(data.message || 'Failed to load details', 'error');
+        }
+    })
+    .catch(error => {
+        closeViewModal();
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+function closeViewModal() {
+    document.getElementById('view-modal').style.display = 'none';
+}
+</script>
+{% endblock %}

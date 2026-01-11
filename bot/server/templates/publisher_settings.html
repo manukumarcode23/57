@@ -1,0 +1,596 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block mobile_title %}Settings{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Publisher Settings</h1>
+    
+    <div class="grid gap-8 lg:grid-cols-2">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                </svg>
+                Change Password
+            </h2>
+            <p class="text-gray-600 mb-6">Update your password to keep your account secure.</p>
+            
+            <form id="passwordForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="current_password" class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                    </div>
+                    
+                    <div>
+                        <label for="new_password" class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                        <input type="password" id="new_password" name="new_password" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                        <p class="text-xs text-gray-500 mt-1">At least 8 characters with uppercase, lowercase, number, and special character</p>
+                    </div>
+                    
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                    </div>
+                </div>
+                
+                <div id="passwordMessage" class="hidden mt-4"></div>
+                
+                <button type="submit" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Update Password
+                </button>
+            </form>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Default Thumbnail
+            </h2>
+            <p class="text-gray-600 mb-6">Upload a thumbnail to be shown for all your videos.</p>
+            
+            <div class="mb-6">
+                {% if publisher.thumbnail_path %}
+                <div class="relative inline-block">
+                    <img id="thumbnailPreview" src="/static/{{ publisher.thumbnail_path }}" alt="Current Thumbnail" class="w-full max-w-xs rounded-xl shadow-md border-2 border-gray-200">
+                    
+                    <div class="absolute top-2 left-2" id="thumbnailStatusBadge">
+                        {% if publisher.thumbnail_status == 'approved' %}
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-green-500 text-white shadow-lg">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Approved
+                        </span>
+                        {% elif publisher.thumbnail_status == 'pending' %}
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white shadow-lg">
+                            <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Pending
+                        </span>
+                        {% elif publisher.thumbnail_status == 'rejected' %}
+                        <span class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-red-500 text-white shadow-lg">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Rejected
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="button" id="deleteThumbnailBtn" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                {% if publisher.thumbnail_status == 'rejected' %}
+                <div class="mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-xl">
+                    <div class="flex items-start gap-3">
+                        <svg class="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-red-800 font-semibold">Your thumbnail was rejected by the admin</p>
+                            <p class="text-red-700 text-sm mt-1">Please upload a new thumbnail that meets our guidelines, or delete this one to start fresh.</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div id="thumbnailPreviewContainer" class="hidden">
+                    <div class="relative inline-block">
+                        <img id="thumbnailPreview" src="" alt="Thumbnail Preview" class="w-full max-w-xs rounded-xl shadow-md border-2 border-gray-200">
+                        <div id="thumbnailStatusBadge" class="absolute top-2 left-2"></div>
+                    </div>
+                </div>
+                <div id="noThumbnailPlaceholder" class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-gray-500 font-semibold">No thumbnail uploaded</p>
+                    <p class="text-sm text-gray-400 mt-1">Upload an image to set as default</p>
+                </div>
+                {% endif %}
+                
+                <div id="uploadProgress" class="hidden mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                        <span class="text-blue-800 font-semibold text-sm">Uploading thumbnail...</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden">
+                        <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-blue-600 mt-2">Please wait while we upload your thumbnail</p>
+                </div>
+            </div>
+            
+            <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <svg class="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-blue-800 font-semibold">Thumbnail Requirements</p>
+                        <ul class="text-blue-700 text-sm mt-1 list-disc list-inside space-y-1">
+                            <li>Aspect Ratio: 16:9 (YouTube standard)</li>
+                            <li>Dimensions: 1280 x 720 pixels</li>
+                            <li>Format: JPEG only</li>
+                            <li>Max file size: 5 MB</li>
+                        </ul>
+                        <p class="text-blue-600 text-xs mt-2">Only images with 16:9 aspect ratio will be accepted.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="thumbnailForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div>
+                    <label for="thumbnail" class="block text-sm font-semibold text-gray-700 mb-2">Choose Thumbnail Image</label>
+                    <input type="file" id="thumbnail" name="thumbnail" accept="image/jpeg,image/jpg,image/png,image/webp" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                    <p class="text-xs text-gray-500 mt-1">Upload 16:9 image in JPEG format (Max 5 MB)</p>
+                </div>
+                
+                <div id="thumbnailMessage" class="hidden"></div>
+                
+                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Upload Thumbnail
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="mt-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                </svg>
+                Publisher Logo
+            </h2>
+            <p class="text-gray-600 mb-6">Upload your publisher logo to be displayed on generated video thumbnails.</p>
+            
+            <div class="mb-6">
+                {% if publisher.logo_path %}
+                <div class="relative inline-block">
+                    <img id="logoPreview" src="/static/{{ publisher.logo_path }}" alt="Current Logo" class="w-full max-w-xs rounded-xl shadow-md border-2 border-gray-200">
+                </div>
+                {% else %}
+                <div id="logoPreviewContainer" class="hidden">
+                    <img id="logoPreview" src="" alt="Logo Preview" class="w-full max-w-xs rounded-xl shadow-md border-2 border-gray-200 mb-4">
+                </div>
+                <div id="noLogoPlaceholder" class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                    <p class="text-gray-500 font-semibold">No logo uploaded</p>
+                    <p class="text-sm text-gray-400 mt-1">Upload an image to set as your logo</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <form id="logoForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div>
+                    <label for="logo" class="block text-sm font-semibold text-gray-700 mb-2">Choose Logo Image</label>
+                    <input type="file" id="logo" name="logo" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                    <p class="text-xs text-gray-500 mt-1">JPG, PNG, WebP, GIF (Max 5 MB)</p>
+                </div>
+                
+                <div id="logoMessage" class="hidden"></div>
+                
+                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Upload Logo
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="mt-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                </svg>
+                Default Video Description
+            </h2>
+            <p class="text-gray-600 mb-6">Set a default description for all your videos. You can override this for individual videos.</p>
+            
+            <form id="descriptionForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div>
+                    <label for="default_description" class="block text-sm font-semibold text-gray-700 mb-2">Default Description</label>
+                    <textarea id="default_description" name="default_description" rows="5" 
+                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200"
+                              placeholder="Enter default description for your videos...">{{ publisher.default_video_description or '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">This description will be used for all videos unless you set a custom one.</p>
+                </div>
+                
+                <div id="descriptionMessage" class="hidden mt-4"></div>
+                
+                <button type="submit" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Save Default Description
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const passwordForm = document.getElementById('passwordForm');
+    const thumbnailForm = document.getElementById('thumbnailForm');
+    const thumbnailInput = document.getElementById('thumbnail');
+    const thumbnailPreview = document.getElementById('thumbnailPreview');
+    const thumbnailPreviewContainer = document.getElementById('thumbnailPreviewContainer');
+    const noThumbnailPlaceholder = document.getElementById('noThumbnailPlaceholder');
+    const deleteThumbnailBtn = document.getElementById('deleteThumbnailBtn');
+    
+    const logoForm = document.getElementById('logoForm');
+    const logoInput = document.getElementById('logo');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoPreviewContainer = document.getElementById('logoPreviewContainer');
+    const noLogoPlaceholder = document.getElementById('noLogoPlaceholder');
+    const descriptionForm = document.getElementById('descriptionForm');
+    
+    thumbnailInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Check if file is an image
+            if (!file.type.match('image/.*')) {
+                showMessage('thumbnailMessage', 'Please select an image file', 'error');
+                thumbnailInput.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const width = img.width;
+                    const height = img.height;
+                    const aspectRatio = width / height;
+                    const targetRatio = 16 / 9;
+                    
+                    // Check if aspect ratio is correct (with small tolerance)
+                    if (Math.abs(aspectRatio - targetRatio) < 0.01) {
+                        // Correct aspect ratio, show preview
+                        if (thumbnailPreview) {
+                            thumbnailPreview.src = e.target.result;
+                        }
+                        if (thumbnailPreviewContainer) {
+                            thumbnailPreviewContainer.classList.remove('hidden');
+                        }
+                        if (noThumbnailPlaceholder) {
+                            noThumbnailPlaceholder.classList.add('hidden');
+                        }
+                    } else {
+                        // Wrong aspect ratio, reject
+                        showMessage('thumbnailMessage', '❌ Invalid aspect ratio! Your image is ' + width + 'x' + height + '. Please upload an image with 16:9 aspect ratio (e.g., 1280x720, 1920x1080, 3840x2160).', 'error');
+                        thumbnailInput.value = '';
+                        return;
+                    }
+                };
+                img.onerror = function() {
+                    showMessage('thumbnailMessage', 'Error loading image. Please try another file.', 'error');
+                    thumbnailInput.value = '';
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                showMessage('thumbnailMessage', 'Error reading file. Please try again.', 'error');
+                thumbnailInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    logoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (logoPreview) {
+                    logoPreview.src = e.target.result;
+                }
+                if (logoPreviewContainer) {
+                    logoPreviewContainer.classList.remove('hidden');
+                }
+                if (noLogoPlaceholder) {
+                    noLogoPlaceholder.classList.add('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    passwordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(passwordForm);
+        const messageDiv = document.getElementById('passwordMessage');
+        
+        try {
+            const response = await fetch('/publisher/settings/update-password', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage('passwordMessage', data.message, 'success');
+                passwordForm.reset();
+            } else {
+                showMessage('passwordMessage', data.message || 'Failed to update password', 'error');
+            }
+        } catch (error) {
+            showMessage('passwordMessage', 'An error occurred. Please try again.', 'error');
+        }
+    });
+    
+    thumbnailForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(thumbnailForm);
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const submitBtn = thumbnailForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        const existingBadges = document.querySelectorAll('.absolute.top-2.left-2');
+        
+        const originalBadgeStates = [];
+        existingBadges.forEach(badge => {
+            originalBadgeStates.push(badge.innerHTML);
+        });
+        
+        const restoreBadges = () => {
+            existingBadges.forEach((badge, index) => {
+                if (originalBadgeStates[index]) {
+                    badge.innerHTML = originalBadgeStates[index];
+                } else {
+                    badge.innerHTML = '';
+                }
+            });
+        };
+        
+        uploadProgress.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="flex items-center justify-center gap-2"><div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div><span>Uploading...</span></div>';
+        progressBar.style.width = '0%';
+        
+        existingBadges.forEach(badge => {
+            badge.innerHTML = `
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-blue-500 text-white shadow-lg">
+                    <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                    Uploading
+                </span>
+            `;
+        });
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+            }
+        });
+        
+        xhr.addEventListener('load', () => {
+            progressBar.style.width = '100%';
+            
+            try {
+                const data = JSON.parse(xhr.responseText);
+                
+                if (xhr.status === 200) {
+                    uploadProgress.classList.add('hidden');
+                    
+                    if (data.pending_approval) {
+                        showMessage('thumbnailMessage', '✓ Upload successful! Your thumbnail is pending admin approval.', 'success');
+                        
+                        existingBadges.forEach(badge => {
+                            badge.innerHTML = `
+                                <span class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-yellow-500 text-white shadow-lg">
+                                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Pending
+                                </span>
+                            `;
+                        });
+                    } else {
+                        showMessage('thumbnailMessage', data.message, 'success');
+                    }
+                    
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    uploadProgress.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    restoreBadges();
+                    showMessage('thumbnailMessage', data.message || 'Failed to upload thumbnail', 'error');
+                }
+            } catch (error) {
+                uploadProgress.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                restoreBadges();
+                showMessage('thumbnailMessage', 'Invalid response from server', 'error');
+            }
+        });
+        
+        xhr.addEventListener('error', () => {
+            uploadProgress.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            progressBar.style.width = '0%';
+            restoreBadges();
+            showMessage('thumbnailMessage', 'An error occurred. Please try again.', 'error');
+        });
+        
+        xhr.addEventListener('abort', () => {
+            uploadProgress.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+            progressBar.style.width = '0%';
+            restoreBadges();
+            showMessage('thumbnailMessage', 'Upload cancelled', 'error');
+        });
+        
+        xhr.open('POST', '/publisher/settings/update-thumbnail');
+        xhr.setRequestHeader('X-CSRF-Token', '{{ csrf_token }}');
+        xhr.send(formData);
+    });
+    
+    logoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(logoForm);
+        
+        try {
+            const response = await fetch('/publisher/settings/update-logo', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage('logoMessage', data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showMessage('logoMessage', data.message || 'Failed to upload logo', 'error');
+            }
+        } catch (error) {
+            showMessage('logoMessage', 'An error occurred. Please try again.', 'error');
+        }
+    });
+    
+    if (deleteThumbnailBtn) {
+        deleteThumbnailBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete your thumbnail?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/publisher/settings/delete-thumbnail', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': '{{ csrf_token }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('thumbnailMessage', data.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showMessage('thumbnailMessage', data.message || 'Failed to delete thumbnail', 'error');
+                }
+            } catch (error) {
+                showMessage('thumbnailMessage', 'An error occurred. Please try again.', 'error');
+            }
+        });
+    }
+    
+    descriptionForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(descriptionForm);
+        
+        try {
+            const response = await fetch('/publisher/settings/update-description', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage('descriptionMessage', data.message, 'success');
+            } else {
+                showMessage('descriptionMessage', data.message || 'Failed to update description', 'error');
+            }
+        } catch (error) {
+            showMessage('descriptionMessage', 'An error occurred. Please try again.', 'error');
+        }
+    });
+    
+    function showMessage(elementId, message, type) {
+        const messageDiv = document.getElementById(elementId);
+        messageDiv.classList.remove('hidden');
+        
+        const bgColor = type === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500';
+        const textColor = type === 'success' ? 'text-green-800' : 'text-red-800';
+        const iconPath = type === 'success' 
+            ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+            : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+        const iconColor = type === 'success' ? 'text-green-600' : 'text-red-600';
+        
+        messageDiv.innerHTML = `
+            <div class="border-l-4 ${bgColor} p-4 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <svg class="h-6 w-6 ${iconColor} flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
+                    </svg>
+                    <p class="${textColor} font-semibold">${message}</p>
+                </div>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

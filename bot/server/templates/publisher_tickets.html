@@ -1,0 +1,160 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}Support Tickets{% endblock %}
+
+{% block mobile_title %}Support Tickets{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Support Tickets</h1>
+    
+    {% if request.args.get('success') %}
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6">
+        <p>{{ request.args.get('success') }}</p>
+    </div>
+    {% endif %}
+    
+    {% if request.args.get('error') %}
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
+        <p>{{ request.args.get('error') }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-gray-600 mb-1">Open Tickets</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ open_count }}</p>
+                </div>
+                <div class="bg-yellow-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-gray-600 mb-1">Closed Tickets</p>
+                    <p class="text-3xl font-bold text-gray-800">{{ closed_count }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Ticket Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Create New Ticket</h2>
+        <form method="POST" action="/publisher/tickets/create" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div>
+                <label for="subject" class="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
+                <input type="text" id="subject" name="subject" required
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200"
+                       placeholder="Brief description of your issue">
+            </div>
+            
+            <div>
+                <label for="priority" class="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                <select id="priority" name="priority"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200">
+                    <option value="low">Low</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="message" class="block text-sm font-semibold text-gray-700 mb-2">Message</label>
+                <textarea id="message" name="message" rows="5" required
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200"
+                          placeholder="Describe your issue in detail..."></textarea>
+            </div>
+            
+            <button type="submit"
+                    class="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition duration-200 shadow-md hover:shadow-lg">
+                Submit Ticket
+            </button>
+        </form>
+    </div>
+    
+    <!-- Tickets List -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6 pb-3 border-b-2 border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800">Your Tickets</h2>
+            <select onchange="window.location.href='/publisher/tickets?status=' + this.value"
+                    class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Tickets</option>
+                <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+        </div>
+        
+        {% if tickets %}
+        <div class="space-y-4">
+            {% for ticket in tickets %}
+            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition duration-200">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <a href="/publisher/tickets/{{ ticket.id }}" class="text-lg font-bold text-gray-800 hover:text-cyan-600">
+                            {{ ticket.subject }}
+                        </a>
+                        <div class="flex gap-2 mt-2">
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                {% if ticket.status == 'open' %}bg-yellow-100 text-yellow-800
+                                {% elif ticket.status == 'closed' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ ticket.status.upper() }}
+                            </span>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                {% if ticket.priority == 'urgent' %}bg-red-100 text-red-800
+                                {% elif ticket.priority == 'high' %}bg-orange-100 text-orange-800
+                                {% elif ticket.priority == 'normal' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ ticket.priority.upper() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right text-sm text-gray-600">
+                        <p>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                </div>
+                
+                <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ ticket.message }}</p>
+                
+                {% if ticket.admin_reply %}
+                <div class="bg-cyan-50 border-l-4 border-cyan-500 p-3 rounded mt-3">
+                    <p class="text-xs font-semibold text-cyan-800 mb-1">Admin Reply:</p>
+                    <p class="text-sm text-gray-700">{{ ticket.admin_reply[:100] }}{% if ticket.admin_reply|length > 100 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+                
+                <a href="/publisher/tickets/{{ ticket.id }}" 
+                   class="inline-block mt-3 text-cyan-600 hover:text-cyan-700 font-semibold text-sm">
+                    View Details →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+            <p class="text-gray-500 text-lg">No tickets found</p>
+            <p class="text-gray-400 text-sm mt-2">Create a ticket above if you need support</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

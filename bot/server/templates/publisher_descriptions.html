@@ -1,0 +1,266 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}Video Descriptions{% endblock %}
+
+{% block mobile_title %}Video Descriptions{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Video Descriptions</h1>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+            Default Video Description
+        </h2>
+        <p class="text-gray-600 mb-6">Set a default description for all your videos. This will be used for videos that don't have a custom description.</p>
+        
+        <form id="defaultDescriptionForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label for="default_description" class="block text-sm font-semibold text-gray-700 mb-2">Default Description</label>
+                <textarea id="default_description" name="default_description" rows="5" 
+                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200"
+                          placeholder="Enter default description for your videos...">{{ publisher.default_video_description or '' }}</textarea>
+                <p class="text-xs text-gray-500 mt-1">This description will be used for all videos unless you set a custom one.</p>
+            </div>
+            
+            <div id="defaultDescriptionMessage" class="hidden mt-4"></div>
+            
+            <button type="submit" class="mt-6 w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                Save Default Description
+            </button>
+        </form>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Custom Descriptions for Individual Videos
+        </h2>
+        <p class="text-gray-600 mb-6">Set custom descriptions for specific videos. These will override the default description.</p>
+        
+        {% if files %}
+        <div class="space-y-3">
+            {% for file in files %}
+            <div class="border border-gray-200 rounded-xl p-4 hover:border-cyan-300 transition duration-200 bg-gray-50">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-800 truncate">{{ file.filename }}</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">
+                                ID: {{ file.access_code }} • 
+                                {% if file.custom_description %}
+                                    <span class="text-green-600 font-semibold">Has Custom Description</span>
+                                {% else %}
+                                    <span class="text-gray-400">Using Default Description</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button type="button" 
+                            class="editDescriptionBtn flex-shrink-0 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 shadow-sm hover:shadow-md text-sm"
+                            data-access-code="{{ file.access_code }}"
+                            data-filename="{{ file.filename }}"
+                            data-current-description="{{ file.custom_description or '' }}">
+                        Edit
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p class="text-gray-500 font-semibold text-lg">No Videos Yet</p>
+            <p class="text-gray-400 mt-2">Upload videos to set custom descriptions</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Popup Modal for Custom Description -->
+<div id="descriptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Custom Description</h3>
+                <button type="button" id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 font-semibold mb-1" id="modalFilename"></p>
+                <p class="text-xs text-gray-500" id="modalFileId"></p>
+            </div>
+            
+            <form id="customDescriptionForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" id="modalAccessCode" name="access_code">
+                
+                <div class="mb-4">
+                    <label for="modalDescription" class="block text-sm font-semibold text-gray-700 mb-2">Custom Description</label>
+                    <textarea id="modalDescription" name="custom_description" rows="6" 
+                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200"
+                              placeholder="Enter custom description for this video..."></textarea>
+                </div>
+                
+                <div id="modalMessage" class="hidden mb-4"></div>
+                
+                <div class="flex gap-3">
+                    <button type="submit" id="saveDescriptionBtn" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg">
+                        Save Custom Description
+                    </button>
+                    <button type="button" id="cancelModalBtn" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition duration-200">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Default Description Form
+document.getElementById('defaultDescriptionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const messageDiv = document.getElementById('defaultDescriptionMessage');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+        
+        const formData = new FormData(e.target);
+        const response = await fetch('/publisher/descriptions/update-default', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        messageDiv.className = `mt-4 p-4 rounded-xl ${
+            data.status === 'success' 
+                ? 'bg-green-50 border border-green-200 text-green-800' 
+                : 'bg-red-50 border border-red-200 text-red-800'
+        }`;
+        messageDiv.textContent = data.message;
+        messageDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+            messageDiv.classList.add('hidden');
+        }, 5000);
+    } catch (error) {
+        messageDiv.className = 'mt-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800';
+        messageDiv.textContent = 'An error occurred. Please try again.';
+        messageDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Modal functionality
+const modal = document.getElementById('descriptionModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const cancelModalBtn = document.getElementById('cancelModalBtn');
+const customDescriptionForm = document.getElementById('customDescriptionForm');
+
+// Open modal when Edit button is clicked
+document.querySelectorAll('.editDescriptionBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const accessCode = btn.dataset.accessCode;
+        const filename = btn.dataset.filename;
+        const currentDescription = btn.dataset.currentDescription;
+        
+        document.getElementById('modalFilename').textContent = filename;
+        document.getElementById('modalFileId').textContent = `ID: ${accessCode}`;
+        document.getElementById('modalAccessCode').value = accessCode;
+        document.getElementById('modalDescription').value = currentDescription;
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    });
+});
+
+// Close modal
+function closeModal() {
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('modalMessage').classList.add('hidden');
+}
+
+closeModalBtn.addEventListener('click', closeModal);
+cancelModalBtn.addEventListener('click', closeModal);
+
+// Close modal when clicking outside
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        closeModal();
+    }
+});
+
+// Submit custom description
+customDescriptionForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const messageDiv = document.getElementById('modalMessage');
+    const submitBtn = document.getElementById('saveDescriptionBtn');
+    const originalText = submitBtn.textContent;
+    const accessCode = document.getElementById('modalAccessCode').value;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+        
+        const formData = new FormData(e.target);
+        const response = await fetch(`/publisher/descriptions/update-custom/${accessCode}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        messageDiv.className = `p-3 rounded-lg text-sm ${
+            data.status === 'success' 
+                ? 'bg-green-50 border border-green-200 text-green-800' 
+                : 'bg-red-50 border border-red-200 text-red-800'
+        }`;
+        messageDiv.textContent = data.message;
+        messageDiv.classList.remove('hidden');
+        
+        if (data.status === 'success') {
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        messageDiv.className = 'p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-800';
+        messageDiv.textContent = 'An error occurred. Please try again.';
+        messageDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+ALTER TABLE settings ADD COLUMN r2_storage_enabled BOOLEAN DEFAULT FALSE;

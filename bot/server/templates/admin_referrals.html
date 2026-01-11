@@ -1,0 +1,139 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Referrals - Admin{% endblock %}
+{% block mobile_title %}Referrals{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="hidden lg:block text-3xl font-bold text-gray-800">All Referrals</h1>
+        <a href="/admin/referral-settings" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl transition duration-200 shadow-md">
+            <i class="fas fa-cog mr-2"></i>Settings
+        </a>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Total: {{ total_referrals }} Referrals</h2>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Referrer</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Referred Publisher</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Referral Code</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Withdrawals</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Earned</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% if referral_data %}
+                        {% for item in referral_data %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ item.referrer.email if item.referrer else 'Unknown' }}</div>
+                                    <div class="text-sm text-gray-500">ID: {{ item.referral.referrer_id }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ item.referred.email if item.referred else 'Unknown' }}</div>
+                                    <div class="text-sm text-gray-500">ID: {{ item.referral.referred_publisher_id }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-sm font-mono">{{ item.referral.referral_code }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if item.referral.status == 'active' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Active</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">{{ item.referral.status|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-gray-900 font-medium">{{ item.referral.completed_withdrawals }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-green-600 font-bold">${{ "%.2f"|format(item.referral.total_rewards_earned) }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ item.referral.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                        </tr>
+                        
+                        {% if item.rewards %}
+                        <tr class="bg-gray-50">
+                            <td colspan="7" class="px-6 py-3">
+                                <div class="text-sm">
+                                    <span class="font-semibold text-gray-700">Rewards History:</span>
+                                    <div class="mt-2 space-y-1">
+                                        {% for reward in item.rewards %}
+                                        <div class="flex items-center gap-3 text-gray-600">
+                                            <span class="px-2 py-1 bg-white rounded text-xs">{{ reward.milestone_type }}</span>
+                                            <span class="font-medium">${{ "%.2f"|format(reward.reward_amount) }}</span>
+                                            {% if reward.status == 'credited' %}
+                                                <span class="text-green-600">✓ Credited {{ reward.credited_at.strftime('%Y-%m-%d') if reward.credited_at else '' }}</span>
+                                            {% else %}
+                                                <span class="text-yellow-600">⏳ Pending</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">No referrals yet</p>
+                                    <p class="text-sm">Referrals will appear here once publishers start referring others</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% if total_pages > 1 %}
+    <div class="mt-6 flex justify-center">
+        <nav class="flex items-center gap-2">
+            {% if page > 1 %}
+                <a href="?page={{ page - 1 }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Previous
+                </a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <span class="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium">{{ p }}</span>
+                {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+                    <a href="?page={{ p }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">{{ p }}</a>
+                {% elif p == 4 or p == total_pages - 3 %}
+                    <span class="px-2">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <a href="?page={{ page + 1 }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Next
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

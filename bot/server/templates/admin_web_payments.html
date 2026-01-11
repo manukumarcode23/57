@@ -1,0 +1,393 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Web Payments - Admin Panel{% endblock %}
+{% block mobile_title %}Web Payments{% endblock %}
+
+{% block extra_head %}
+<style>
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-completed {
+        background-color: #10b981;
+        color: white;
+    }
+    .status-pending {
+        background-color: #f59e0b;
+        color: white;
+    }
+    .status-failed {
+        background-color: #ef4444;
+        color: white;
+    }
+    .status-cancelled {
+        background-color: #6b7280;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Web Payments</h1>
+            <p class="text-gray-600 mt-1">Track all web subscription payment transactions</p>
+        </div>
+        <button onclick="openGrantModal()" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Grant Web Subscription
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-green-100 rounded-xl">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Completed</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ payment_data|selectattr('0.status', 'equalto', 'completed')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-yellow-100 rounded-xl">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Pending</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ payment_data|selectattr('0.status', 'equalto', 'pending')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-red-100 rounded-xl">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Failed</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ payment_data|selectattr('0.status', 'equalto', 'failed')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-cyan-100 rounded-xl">
+                    <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Revenue</p>
+                    <p class="text-2xl font-bold text-gray-800">₹{{ "%.2f"|format(payment_data|selectattr('0.status', 'equalto', 'completed')|sum(attribute='0.amount')) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="searchInput" placeholder="Search by Order ID or Publisher Email..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                </div>
+                <button onclick="searchPayments()" class="px-6 py-3 bg-cyan-500 text-white font-semibold rounded-xl hover:bg-cyan-600 transition duration-200">
+                    Search
+                </button>
+                <button onclick="resetSearch()" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition duration-200">
+                    Reset
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="paymentsTable">
+                <thead class="bg-gradient-to-r from-cyan-50 to-blue-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Order ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Publisher</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Plan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Uploads</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Payment Method</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">UTR</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Expires</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if payment_data %}
+                        {% for subscription, publisher in payment_data %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ subscription.order_id }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if publisher %}
+                                <div class="text-sm text-cyan-600 font-medium">{{ publisher.email }}</div>
+                                {% else %}
+                                <div class="text-sm text-gray-400">-</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ subscription.plan_name }}</div>
+                                <div class="text-xs text-gray-500">{{ subscription.duration_days }} days</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-semibold text-gray-900">₹{{ '%.2f'|format(subscription.amount) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ subscription.uploads_used }}/{{ subscription.upload_limit or '∞' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="status-badge status-{{ subscription.status }}">{{ subscription.status }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 capitalize">{{ subscription.payment_method }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 font-mono">{{ subscription.utr_number or '-' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ subscription.created_at.strftime('%Y-%m-%d') }}</div>
+                                <div class="text-xs text-gray-500">{{ subscription.created_at.strftime('%H:%M') }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if subscription.expires_at %}
+                                <div class="text-sm text-gray-900">{{ subscription.expires_at.strftime('%Y-%m-%d') }}</div>
+                                <div class="text-xs text-gray-500">{{ subscription.expires_at.strftime('%H:%M') }}</div>
+                                {% else %}
+                                <div class="text-sm text-gray-400">-</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="px-6 py-12 text-center text-gray-500">
+                                No web payment transactions found
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="grantModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-cyan-500 to-cyan-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h2 class="text-xl font-bold text-white">Grant Web Subscription</h2>
+            <button onclick="closeGrantModal()" class="text-white hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="grantForm" class="p-6 space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Publisher *</label>
+                <select name="publisher_id" id="publisher_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                    <option value="">Select a publisher</option>
+                    {% for publisher in publishers %}
+                    <option value="{{ publisher.id }}">{{ publisher.email }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Subscription Plan *</label>
+                <select name="plan_id" id="plan_id" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
+                    <option value="">Select a plan</option>
+                    {% for plan in plans %}
+                    <option value="{{ plan.id }}" data-amount="{{ plan.amount }}" data-days="{{ plan.duration_days }}" data-uploads="{{ plan.upload_limit }}">
+                        {{ plan.name }} - ₹{{ '%.2f'|format(plan.amount) }} ({{ plan.duration_days }} days, {{ plan.upload_limit or 'Unlimited' }} uploads)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div id="planDetails" class="hidden bg-cyan-50 border border-cyan-200 rounded-xl p-4">
+                <h3 class="font-semibold text-cyan-800 mb-2">Plan Details</h3>
+                <div class="space-y-1 text-sm text-gray-700">
+                    <div>Amount: <span id="detailAmount" class="font-semibold">-</span></div>
+                    <div>Duration: <span id="detailDays" class="font-semibold">-</span></div>
+                    <div>Upload Limit: <span id="detailUploads" class="font-semibold">-</span></div>
+                    <div>Expires: <span id="detailExpiry" class="font-semibold">-</span></div>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-red-700"></div>
+            <div id="successMessage" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 text-green-700"></div>
+            
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                    Grant Subscription
+                </button>
+                <button type="button" onclick="closeGrantModal()" class="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openGrantModal() {
+        document.getElementById('grantModal').classList.remove('hidden');
+        document.getElementById('grantForm').reset();
+        document.getElementById('errorMessage').classList.add('hidden');
+        document.getElementById('successMessage').classList.add('hidden');
+        document.getElementById('planDetails').classList.add('hidden');
+    }
+    
+    function closeGrantModal() {
+        document.getElementById('grantModal').classList.add('hidden');
+    }
+    
+    document.getElementById('plan_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const amount = selectedOption.getAttribute('data-amount');
+        const days = selectedOption.getAttribute('data-days');
+        const uploads = selectedOption.getAttribute('data-uploads');
+        
+        if (amount && days) {
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + parseInt(days));
+            
+            document.getElementById('detailAmount').textContent = '₹' + parseFloat(amount).toFixed(2);
+            document.getElementById('detailDays').textContent = days + ' days';
+            document.getElementById('detailUploads').textContent = uploads ? uploads + ' uploads' : 'Unlimited';
+            document.getElementById('detailExpiry').textContent = expiryDate.toLocaleDateString();
+            document.getElementById('planDetails').classList.remove('hidden');
+        } else {
+            document.getElementById('planDetails').classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('grantForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        
+        try {
+            const response = await fetch('/admin/web-subscriptions/grant', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                successDiv.textContent = data.message;
+                successDiv.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    closeGrantModal();
+                    location.reload();
+                }, 2000);
+            } else {
+                errorDiv.textContent = data.message;
+                errorDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.classList.remove('hidden');
+        }
+    });
+    
+    async function searchPayments() {
+        const query = document.getElementById('searchInput').value.trim();
+        
+        if (!query) {
+            alert('Please enter a search query');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/admin/web-payments/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ query: query })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.payments) {
+                updatePaymentsTable(data.payments);
+            } else {
+                alert(data.message || 'No results found');
+            }
+        } catch (error) {
+            alert('Search failed. Please try again.');
+        }
+    }
+    
+    function resetSearch() {
+        location.reload();
+    }
+    
+    function updatePaymentsTable(payments) {
+        const tbody = document.querySelector('#paymentsTable tbody');
+        tbody.innerHTML = '';
+        
+        if (payments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gray-500">No web payment transactions found</td></tr>';
+            return;
+        }
+        
+        payments.forEach(payment => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors duration-150';
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-gray-900">${payment.order_id}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-cyan-600 font-medium">${payment.publisher_email || '-'}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${payment.plan_name}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-semibold text-gray-900">₹${parseFloat(payment.amount).toFixed(2)}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${payment.uploads_used}/${payment.upload_limit || '∞'}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="status-badge status-${payment.status}">${payment.status}</span></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900 capitalize">${payment.payment_method}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900 font-mono">${payment.utr_number || '-'}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${payment.created_at || '-'}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${payment.expires_at || '-'}</div></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchPayments();
+        }
+    });
+</script>
+{% endblock %}

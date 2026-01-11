@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+
+{% block title %}TeraBox Settings - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">TeraBox Link Support</h1>
+            <p class="text-gray-600 mt-2">Manage supported domains and link extraction settings for TeraBox-style services.</p>
+        </div>
+        <div class="p-3 bg-cyan-100 rounded-2xl">
+            <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+            </svg>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-cyan-100">
+        <form method="POST" class="p-8">
+            <div class="space-y-8">
+                <!-- Domains Section -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                        </svg>
+                        Supported Domains
+                    </h3>
+                    <p class="text-sm text-gray-500 mb-4">Enter domains separated by commas (e.g., terabox.com,1024tera.com)</p>
+                    <textarea name="domains" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all font-mono text-sm" rows="4" placeholder="terabox.com,1024tera.com,terasharefile.com">{{ raw_domains }}</textarea>
+                </div>
+
+                <!-- API Configuration Section -->
+                <div class="pt-6 border-t border-gray-100">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                        API Configuration
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">External Link Generation API URL</label>
+                            <input type="text" name="terabox_api_url" value="{{ terabox_api_url }}" 
+                                   class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all font-mono text-sm" 
+                                   placeholder="https://api.example.com/generate">
+                            <p class="mt-2 text-xs text-gray-500">This URL will be used for generating external links for TeraBox files.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        {% for domain in domains %}
+                        <div class="p-4 bg-cyan-50 rounded-2xl border border-cyan-100 flex items-center justify-between group">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl font-bold text-cyan-600 shadow-sm">{{ domain[0]|upper }}</div>
+                                <p class="font-bold text-gray-900">{{ domain }}</p>
+                            </div>
+                            <span class="text-cyan-500">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex items-center justify-end">
+                <button type="submit" class="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-2xl shadow-lg transition duration-200">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

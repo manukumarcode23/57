@@ -1,0 +1,344 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}Subscription - Publisher Panel{% endblock %}
+{% block mobile_title %}Subscription{% endblock %}
+
+{% block extra_head %}
+<style>
+    .plan-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+    .qr-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Subscription</h1>
+        <p class="text-gray-600 mt-2">Manage your video upload subscription</p>
+    </div>
+
+    {% if not web_subscriptions_enabled %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+                <h3 class="font-semibold text-yellow-800">Web Subscriptions Not Required</h3>
+                <p class="text-yellow-700 text-sm">You can upload videos without a subscription. Contact admin if you need assistance.</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    {% if active_subscription %}
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 mb-8 text-white shadow-lg">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="bg-white/20 p-3 rounded-xl">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold">Active Subscription</h2>
+                <p class="text-green-100">{{ active_subscription.plan_name }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="bg-white/10 rounded-xl p-4">
+                <p class="text-green-100 text-sm">Uploads</p>
+                <p class="text-2xl font-bold">Unlimited</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-4">
+                <p class="text-green-100 text-sm">Max File Size</p>
+                <p class="text-2xl font-bold">{{ active_subscription.max_file_size_mb }} MB</p>
+            </div>
+            <div class="bg-white/10 rounded-xl p-4">
+                <p class="text-green-100 text-sm">Expires</p>
+                <p class="text-lg font-bold">{% if active_subscription.expires_at %}{{ active_subscription.expires_at.strftime('%d %b %Y') }}{% else %}Never{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-8">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+                <h3 class="font-semibold text-orange-800">No Active Subscription</h3>
+                <p class="text-orange-700 text-sm">Purchase a subscription plan below to start uploading videos.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if plans %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Available Plans</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for plan in plans %}
+            <div class="plan-card bg-white rounded-2xl shadow-lg p-6 border border-gray-100 transition-all duration-300">
+                <div class="mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">{{ plan.name }}</h3>
+                    {% if plan.description %}
+                    <p class="text-gray-500 text-sm mt-1">{{ plan.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="mb-6">
+                    <span class="text-4xl font-bold text-cyan-600">{{ plan.amount }}</span>
+                    <span class="text-gray-500">/ {{ plan.duration_days }} days</span>
+                </div>
+                <ul class="space-y-3 mb-6 text-sm">
+                    <li class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Unlimited video uploads
+                    </li>
+                    <li class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Max {{ plan.max_file_size_mb }} MB per file
+                    </li>
+                    <li class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Valid for {{ plan.duration_days }} days
+                    </li>
+                </ul>
+                <button onclick="purchasePlan({{ plan.id }}, '{{ plan.name }}', {{ plan.amount }})" class="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-300">
+                    Purchase Now
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8 text-center">
+        <p class="text-gray-600">No subscription plans available at the moment. Please check back later.</p>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    {% if subscriptions %}
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Subscription History</h2>
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for sub in subscriptions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ sub.plan_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sub.amount }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if sub.status == 'completed' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
+                                {% elif sub.status == 'pending' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                {% else %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ sub.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sub.duration_days }} days</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{% if sub.expires_at %}{{ sub.expires_at.strftime('%d %b %Y') }}{% else %}-{% endif %}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ sub.created_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="paymentModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closePaymentModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-auto transform transition-all">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900" id="modalPlanName">Payment</h3>
+                    <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="paymentLoading" class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Creating payment...</p>
+                </div>
+
+                <div id="paymentContent" class="hidden">
+                    <div class="text-center mb-6">
+                        <p class="text-gray-600">Scan QR code or use UPI app to pay</p>
+                        <p class="text-3xl font-bold text-cyan-600 mt-2" id="paymentAmount"></p>
+                    </div>
+
+                    <div class="qr-container p-4 rounded-xl mb-4">
+                        <img id="qrCodeImage" src="" alt="Payment QR Code" class="mx-auto max-w-[200px]">
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <a id="paytmLink" href="#" class="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition">
+                            <span>Pay with Paytm</span>
+                        </a>
+                        <a id="upiLink" href="#" class="flex items-center justify-center gap-2 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition">
+                            <span>Pay with UPI</span>
+                        </a>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                        <p class="text-sm text-gray-600 text-center">UPI ID: <span id="upiIdDisplay" class="font-semibold"></span></p>
+                    </div>
+
+                    <div id="paymentStatusArea" class="text-center">
+                        <div class="flex items-center justify-center gap-2 text-gray-600">
+                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600"></div>
+                            <span>Checking payment status...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentSuccess" class="hidden text-center py-6">
+                    <div class="bg-green-100 rounded-full p-4 inline-block mb-4">
+                        <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Payment Successful!</h3>
+                    <p class="text-gray-600 mb-4">Your subscription is now active.</p>
+                    <button onclick="location.reload()" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-6 rounded-xl transition">
+                        Continue
+                    </button>
+                </div>
+
+                <div id="paymentError" class="hidden text-center py-6">
+                    <div class="bg-red-100 rounded-full p-4 inline-block mb-4">
+                        <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Payment Failed</h3>
+                    <p class="text-gray-600 mb-4" id="errorMessage">Something went wrong.</p>
+                    <button onclick="closePaymentModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-xl transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentOrderId = null;
+let statusCheckInterval = null;
+const csrfToken = '{{ csrf_token }}';
+
+function purchasePlan(planId, planName, amount) {
+    document.getElementById('modalPlanName').textContent = planName;
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.getElementById('paymentLoading').classList.remove('hidden');
+    document.getElementById('paymentContent').classList.add('hidden');
+    document.getElementById('paymentSuccess').classList.add('hidden');
+    document.getElementById('paymentError').classList.add('hidden');
+
+    const formData = new FormData();
+    formData.append('plan_id', planId);
+
+    fetch('/publisher/subscription/create-payment', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-Token': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentOrderId = data.order_id;
+            document.getElementById('paymentAmount').textContent = data.amount;
+            document.getElementById('qrCodeImage').src = data.qr_url;
+            document.getElementById('paytmLink').href = data.paytm_intent;
+            document.getElementById('upiLink').href = data.upi_link;
+            document.getElementById('upiIdDisplay').textContent = data.upi_id;
+
+            document.getElementById('paymentLoading').classList.add('hidden');
+            document.getElementById('paymentContent').classList.remove('hidden');
+
+            startStatusCheck();
+        } else {
+            showError(data.message || 'Failed to create payment');
+        }
+    })
+    .catch(error => {
+        showError('Network error. Please try again.');
+    });
+}
+
+function startStatusCheck() {
+    if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+    }
+    
+    statusCheckInterval = setInterval(() => {
+        if (currentOrderId) {
+            fetch(`/publisher/subscription/check-status/${currentOrderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed') {
+                        clearInterval(statusCheckInterval);
+                        document.getElementById('paymentContent').classList.add('hidden');
+                        document.getElementById('paymentSuccess').classList.remove('hidden');
+                    } else if (data.status === 'failed') {
+                        clearInterval(statusCheckInterval);
+                        showError('Payment failed. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Status check error:', error);
+                });
+        }
+    }, 5000);
+}
+
+function showError(message) {
+    document.getElementById('paymentLoading').classList.add('hidden');
+    document.getElementById('paymentContent').classList.add('hidden');
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('paymentError').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+    if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+    }
+    currentOrderId = null;
+}
+</script>
+{% endblock %}

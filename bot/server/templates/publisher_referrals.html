@@ -1,0 +1,343 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}Refer & Earn{% endblock %}
+
+{% block mobile_title %}Refer & Earn{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .referral-code-text {
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
+        letter-spacing: 0.15em;
+        word-break: break-all;
+    }
+    
+    .referral-link-input {
+        font-size: 0.75rem;
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    @media (max-width: 640px) {
+        .referral-code-container {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 1rem;
+        }
+        
+        .referral-link-section {
+            text-align: left !important;
+        }
+        
+        .referral-link-input {
+            width: 100% !important;
+        }
+        
+        .copy-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    .stat-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .copy-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .gradient-card {
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Refer & Earn</h1>
+    
+    {% if error_message %}
+    <div class="bg-red-50 border-l-4 border-red-400 p-6 rounded-xl mb-8">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-red-700 font-medium">{{ error_message }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if system_disabled %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-xl mb-8">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700 font-medium">
+                    The referral system is currently disabled by the administrator.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% elif referral_code %}
+    
+    <div class="gradient-card rounded-2xl shadow-xl p-6 sm:p-8 mb-6 text-white">
+        <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Your Referral Code</h2>
+        <div class="bg-white bg-opacity-20 rounded-xl p-4 sm:p-6 backdrop-blur-sm">
+            <div class="referral-code-container flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex-1 w-full">
+                    <p class="text-xs sm:text-sm text-cyan-100 mb-3">Share this code with other publishers:</p>
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        <span class="referral-code-text font-bold font-mono text-white">{{ referral_code.referral_code }}</span>
+                        <button onclick="copyCode()" class="copy-btn px-4 py-2.5 bg-white text-cyan-600 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2 whitespace-nowrap">
+                            <i class="fas fa-copy"></i>Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="referral-link-section w-full sm:w-auto text-center sm:text-right mt-4 sm:mt-0">
+                    <p class="text-xs sm:text-sm text-cyan-100 mb-2">Registration Link:</p>
+                    <div class="flex flex-col sm:flex-row items-stretch gap-2">
+                        <input type="text" id="referralLink" readonly 
+                               value="{{ request.url_root }}register?ref={{ referral_code.referral_code }}"
+                               class="referral-link-input px-3 py-2 bg-white bg-opacity-20 rounded-lg font-mono text-white border border-white border-opacity-30 focus:outline-none focus:border-opacity-50">
+                        <button onclick="copyLink()" class="copy-btn px-4 py-2.5 bg-white text-cyan-600 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="fas fa-link"></i>Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div class="stat-card bg-white rounded-xl sm:rounded-2xl shadow-lg p-5 sm:p-6 border-l-4 border-cyan-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Total Referrals</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-800">{{ referral_code.total_referrals }}</p>
+                </div>
+                <div class="bg-cyan-100 rounded-full p-2.5 sm:p-3">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card bg-white rounded-xl sm:rounded-2xl shadow-lg p-5 sm:p-6 border-l-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Total Earned</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-emerald-600">${{ "%.2f"|format(referral_code.total_earnings) }}</p>
+                </div>
+                <div class="bg-emerald-100 rounded-full p-2.5 sm:p-3">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card bg-white rounded-xl sm:rounded-2xl shadow-lg p-5 sm:p-6 border-l-4 border-amber-500 sm:col-span-2 lg:col-span-1">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Pending Rewards</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-amber-600">${{ "%.2f"|format(total_pending_rewards) }}</p>
+                </div>
+                <div class="bg-amber-100 rounded-full p-2.5 sm:p-3">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg p-5 sm:p-6 mb-6 sm:mb-8">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">How It Works</h2>
+        <div class="grid grid-cols-1 md:grid-cols-{{ '3' if settings.reward_on_registration or settings.new_publisher_welcome_bonus_enabled else '2' }} gap-6">
+            {% if settings.reward_on_registration and settings.registration_reward_amount > 0 %}
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-cyan-100 rounded-lg flex-shrink-0">
+                    <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Your Registration Bonus</h3>
+                    <p class="text-sm text-gray-600">Earn <strong class="text-green-600">${{ "%.2f"|format(settings.registration_reward_amount) }}</strong> when someone signs up with your code</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if settings.new_publisher_welcome_bonus_enabled and settings.new_publisher_welcome_bonus_amount > 0 %}
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-emerald-100 rounded-lg flex-shrink-0">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-1">New Publisher Welcome</h3>
+                    <p class="text-sm text-gray-600">They get <strong class="text-emerald-600">${{ "%.2f"|format(settings.new_publisher_welcome_bonus_amount) }}</strong> welcome bonus when joining with your code</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if settings.reward_on_first_withdrawal and settings.first_withdrawal_reward_amount > 0 %}
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-1">First Withdrawal</h3>
+                    <p class="text-sm text-gray-600">Earn <strong class="text-green-600">${{ "%.2f"|format(settings.first_withdrawal_reward_amount) }}</strong> when they complete their first withdrawal</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if settings.reward_on_second_withdrawal and settings.second_withdrawal_reward_amount > 0 %}
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Second Withdrawal</h3>
+                    <p class="text-sm text-gray-600">Earn <strong class="text-green-600">${{ "%.2f"|format(settings.second_withdrawal_reward_amount) }}</strong> when they complete their second withdrawal</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if referral_data %}
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800">Your Referrals</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Publisher</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Withdrawals</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Earned</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Joined</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for item in referral_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">{{ item.referred.email if item.referred else 'Unknown' }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if item.referral.status == 'active' %}
+                                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Active</span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">{{ item.referral.status|capitalize }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-gray-900">{{ item.referral.completed_withdrawals }}</td>
+                        <td class="px-6 py-4">
+                            <span class="text-green-600 font-bold">${{ "%.2f"|format(item.referral.total_rewards_earned) }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ item.referral.created_at.strftime('%Y-%m-%d') }}
+                        </td>
+                    </tr>
+                    {% if item.rewards %}
+                    <tr class="bg-gray-50">
+                        <td colspan="5" class="px-6 py-3">
+                            <div class="text-sm">
+                                <span class="font-semibold text-gray-700">Rewards:</span>
+                                <div class="mt-1 flex flex-wrap gap-2">
+                                    {% for reward in item.rewards %}
+                                    <span class="px-3 py-1 bg-white rounded-lg text-xs border border-gray-200">
+                                        {{ reward.milestone_type.replace('_', ' ')|title }}: 
+                                        <strong class="text-green-600">${{ "%.2f"|format(reward.reward_amount) }}</strong>
+                                        {% if reward.status == 'credited' %}
+                                            <span class="text-green-600">✓</span>
+                                        {% else %}
+                                            <span class="text-yellow-600">⏳</span>
+                                        {% endif %}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <svg class="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">No Referrals Yet</h3>
+        <p class="text-gray-600">Share your referral code with other publishers to start earning!</p>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+function copyCode() {
+    {% if referral_code %}
+    const code = '{{ referral_code.referral_code }}';
+    navigator.clipboard.writeText(code).then(() => {
+        showNotification('Referral code copied!');
+    });
+    {% endif %}
+}
+
+function copyLink() {
+    const link = document.getElementById('referralLink').value;
+    navigator.clipboard.writeText(link).then(() => {
+        showNotification('Referral link copied!');
+    });
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 sm:left-auto sm:right-4 sm:transform-none bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 animate-slide-up';
+    notification.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(10px)';
+        setTimeout(() => notification.remove(), 300);
+    }, 2500);
+}
+</script>
+{% endblock %}

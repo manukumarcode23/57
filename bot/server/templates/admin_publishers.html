@@ -1,0 +1,271 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Publishers - Admin Panel{% endblock %}
+{% block mobile_title %}Publishers{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Publishers Management</h1>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Register New Publisher</h2>
+        
+        {% if error %}
+        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl">
+            <p class="text-red-700 text-sm">{{ error }}</p>
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="/admin/register-publisher" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" required
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required minlength="6"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                </div>
+            </div>
+            
+            <div>
+                <label for="traffic_source" class="block text-sm font-semibold text-gray-700 mb-2">Traffic Source Link</label>
+                <input type="text" id="traffic_source" name="traffic_source" required
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+            </div>
+            
+            <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                <input type="checkbox" id="is_admin" name="is_admin"
+                       class="w-5 h-5 text-cyan-600 border-gray-300 rounded focus:ring-2 focus:ring-cyan-500">
+                <label for="is_admin" class="text-sm font-semibold text-gray-700 cursor-pointer">Make this publisher an admin</label>
+            </div>
+            
+            <button type="submit"
+                    class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                Register Publisher
+            </button>
+        </form>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">All Publishers</h2>
+        
+        <div class="overflow-x-auto -mx-6 sm:mx-0">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Traffic Source</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Files</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Impressions</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Custom Rate</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for publisher in publishers %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-800">{{ publisher.email }}</div>
+                            </td>
+                            <td class="px-4 py-4 hidden md:table-cell">
+                                <div class="text-sm text-gray-600 max-w-xs truncate">{{ publisher.traffic_source }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if publisher.is_admin %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800">Admin</span>
+                                {% else %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Publisher</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800">
+                                    {{ publisher_files.get(publisher.id, 0) }} files
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs text-gray-600">
+                                        Earned: {{ publisher_impressions.get(publisher.id, 0) }}
+                                    </span>
+                                    {% set adjusted = publisher_adjustments.get(publisher.id, 0) %}
+                                    {% if adjusted > 0 %}
+                                    <span class="text-xs text-green-600 font-semibold">
+                                        Added: +{{ adjusted }}
+                                    </span>
+                                    {% endif %}
+                                    <span class="text-xs font-bold text-gray-800">
+                                        Total: {{ publisher_impressions.get(publisher.id, 0) + adjusted }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                                {% if publisher.custom_impression_rate is not none %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    ${{ "%.4f"|format(publisher.custom_impression_rate) }} / 1k
+                                </span>
+                                {% else %}
+                                <span class="inline-flex px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-500">
+                                    Default
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="flex flex-col sm:flex-row gap-2">
+                                    <a href="/admin/publisher/{{ publisher.id }}/files"
+                                       class="px-4 py-2 text-xs font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-600 text-white transition duration-200 text-center">
+                                        View Files
+                                    </a>
+                                    <button onclick="showAddImpressionModal({{ publisher.id }})"
+                                            data-email="{{ publisher.email }}"
+                                            class="px-4 py-2 text-xs font-semibold rounded-lg bg-green-500 hover:bg-green-600 text-white transition duration-200">
+                                        Add Impressions
+                                    </button>
+                                    <button onclick="showSetCustomRateModal({{ publisher.id }}, {{ publisher.custom_impression_rate if publisher.custom_impression_rate is not none else 'null' }})"
+                                            data-email="{{ publisher.email }}"
+                                            class="px-4 py-2 text-xs font-semibold rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition duration-200">
+                                        Set Rate
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="addImpressionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Add Impressions</h3>
+        <p class="text-sm text-gray-600 mb-4">Publisher: <span id="modalPublisherEmail" class="font-semibold"></span></p>
+        
+        <form id="addImpressionForm" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label for="amount" class="block text-sm font-semibold text-gray-700 mb-2">Impression Amount</label>
+                <input type="number" id="amount" name="amount" required min="1" step="1"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 shadow-sm">
+            </div>
+            
+            <div>
+                <label for="note" class="block text-sm font-semibold text-gray-700 mb-2">Note (Optional)</label>
+                <textarea id="note" name="note" rows="3" placeholder="Reason for adding impressions..."
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 shadow-sm"></textarea>
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg">
+                    Add Impressions
+                </button>
+                <button type="button" onclick="hideAddImpressionModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="setCustomRateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Set Custom Impression Rate</h3>
+        <p class="text-sm text-gray-600 mb-4">Publisher: <span id="rateModalPublisherEmail" class="font-semibold"></span></p>
+        
+        <form id="setCustomRateForm" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label for="custom_rate" class="block text-sm font-semibold text-gray-700 mb-2">Custom Rate (per 1000 impressions)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <input type="number" id="custom_rate" name="custom_rate" step="0.0001" min="0" placeholder="0.0200"
+                           class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 shadow-sm">
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Leave empty to use default rate (country-specific or global)</p>
+            </div>
+            
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3">
+                <p class="text-xs text-gray-700"><strong>Example:</strong></p>
+                <ul class="text-xs text-gray-600 mt-1 space-y-1">
+                    <li>• Publisher A: $0.0200 per 1k impressions</li>
+                    <li>• Publisher B: $0.0100 per 1k impressions</li>
+                    <li>• Publisher C: $0.0300 per 1k impressions</li>
+                </ul>
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg">
+                    Set Custom Rate
+                </button>
+                <button type="button" onclick="hideSetCustomRateModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentPublisherId = null;
+
+function showAddImpressionModal(publisherId) {
+    currentPublisherId = publisherId;
+    const button = event.currentTarget;
+    const publisherEmail = button.getAttribute('data-email');
+    document.getElementById('modalPublisherEmail').textContent = publisherEmail;
+    document.getElementById('addImpressionForm').action = '/admin/add-impressions/' + publisherId;
+    document.getElementById('addImpressionModal').classList.remove('hidden');
+    document.getElementById('amount').value = '';
+    document.getElementById('note').value = '';
+}
+
+function hideAddImpressionModal() {
+    document.getElementById('addImpressionModal').classList.add('hidden');
+    currentPublisherId = null;
+}
+
+function showSetCustomRateModal(publisherId, currentRate) {
+    currentPublisherId = publisherId;
+    const button = event.currentTarget;
+    const publisherEmail = button.getAttribute('data-email');
+    document.getElementById('rateModalPublisherEmail').textContent = publisherEmail;
+    document.getElementById('setCustomRateForm').action = '/admin/set-custom-rate/' + publisherId;
+    document.getElementById('setCustomRateModal').classList.remove('hidden');
+    
+    if (currentRate !== null) {
+        document.getElementById('custom_rate').value = currentRate;
+    } else {
+        document.getElementById('custom_rate').value = '';
+    }
+}
+
+function hideSetCustomRateModal() {
+    document.getElementById('setCustomRateModal').classList.add('hidden');
+    currentPublisherId = null;
+}
+
+document.getElementById('addImpressionModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideAddImpressionModal();
+    }
+});
+
+document.getElementById('setCustomRateModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideSetCustomRateModal();
+    }
+});
+</script>
+{% endblock %}

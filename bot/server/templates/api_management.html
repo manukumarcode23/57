@@ -1,0 +1,211 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}API Management{% endblock %}
+
+{% block mobile_title %}API Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">API Management</h1>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">API Key Configuration</h2>
+        <p class="text-gray-600 mb-6">You need an API key to upload videos. Generate one below to start uploading.</p>
+        
+        {% if api_key %}
+        <div class="bg-cyan-50 border-l-4 border-cyan-500 p-4 rounded-xl mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="h-6 w-6 text-cyan-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-cyan-800 mb-2">Your API Key:</p>
+                    <div class="bg-white p-3 rounded-lg border border-cyan-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <code class="text-sm text-gray-800 font-mono flex-1 overflow-hidden break-all">••••••••••••••••••••••••••••••••</code>
+                        <button id="copyApiKeyBtn" data-api-key="{{ api_key }}" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="text-sm text-cyan-700 mt-2">Keep this key secure. It allows uploading videos to your account.</p>
+                    <div id="copySuccessMessage" class="hidden mt-2 text-sm text-green-700 font-semibold">✓ API Key copied to clipboard!</div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="regenerateBtn" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            Regenerate API Key
+        </button>
+        {% else %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-xl mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <div>
+                    <p class="font-semibold text-yellow-800">No API Key Generated</p>
+                    <p class="text-sm text-yellow-700 mt-1">You need to generate an API key before you can upload videos.</p>
+                </div>
+            </div>
+        </div>
+        
+        <button id="generateBtn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            Generate API Key
+        </button>
+        {% endif %}
+        
+        <div id="message" class="hidden mt-6"></div>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-lg p-6 mt-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Available Bots</h2>
+        <p class="text-gray-600 mb-6">Use these bots to help manage your uploads and content.</p>
+        
+        {% if bots %}
+            <div class="grid gap-4 md:grid-cols-2">
+                {% for bot in bots %}
+                <div class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition duration-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">{{ bot.bot_name }}</h3>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">{{ bot.purpose }}</p>
+                    <a href="{{ bot.bot_link }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition duration-200">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 3.928-1.36 5.211-.168.542-.5.724-.82.742-.696.064-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.248-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.481-.428-.008-1.252-.242-1.865-.442-.752-.245-1.349-.374-1.297-.789.027-.216.324-.437.892-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.14.122.099.155.232.171.326.016.094.036.308.02.475z"/>
+                        </svg>
+                        <span>Open Bot</span>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-gray-50 border-l-4 border-gray-400 p-4 rounded-xl">
+                <p class="text-sm text-gray-600">No bots are currently available. Check back later!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const regenerateBtn = document.getElementById('regenerateBtn');
+    const message = document.getElementById('message');
+    const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
+    const copySuccessMessage = document.getElementById('copySuccessMessage');
+    
+    // Handle API key copy
+    if (copyApiKeyBtn) {
+        copyApiKeyBtn.addEventListener('click', async () => {
+            const apiKey = copyApiKeyBtn.dataset.apiKey;
+            
+            try {
+                // Use modern clipboard API
+                await navigator.clipboard.writeText(apiKey);
+                
+                // Show success message
+                copySuccessMessage.classList.remove('hidden');
+                
+                // Change button text temporarily
+                const originalText = copyApiKeyBtn.innerHTML;
+                copyApiKeyBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Copied!
+                `;
+                copyApiKeyBtn.classList.remove('bg-cyan-500', 'hover:bg-cyan-600');
+                copyApiKeyBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyApiKeyBtn.innerHTML = originalText;
+                    copyApiKeyBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    copyApiKeyBtn.classList.add('bg-cyan-500', 'hover:bg-cyan-600');
+                    copySuccessMessage.classList.add('hidden');
+                }, 2000);
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = apiKey;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    copySuccessMessage.classList.remove('hidden');
+                    setTimeout(() => copySuccessMessage.classList.add('hidden'), 2000);
+                } catch (err) {
+                    alert('Failed to copy API key. Please copy it manually.');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        });
+    }
+    
+    async function generateApiKey() {
+        try {
+            const response = await fetch('/publisher/generate-api-key', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showMessage(`
+                    <div class="flex items-start gap-3">
+                        <svg class="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-green-800">API Key Generated Successfully!</p>
+                            <p class="text-sm text-green-700 mt-1">Refreshing page...</p>
+                        </div>
+                    </div>
+                `, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showMessage(data.message || 'Failed to generate API key', 'error');
+            }
+        } catch (error) {
+            showMessage('An error occurred. Please try again.', 'error');
+        }
+    }
+    
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generateApiKey);
+    }
+    
+    if (regenerateBtn) {
+        regenerateBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to regenerate your API key? The old key will stop working.')) {
+                generateApiKey();
+            }
+        });
+    }
+    
+    function showMessage(text, type) {
+        const bgColor = type === 'success' ? 'bg-green-50' : 'bg-red-50';
+        const borderColor = type === 'success' ? 'border-green-500' : 'border-red-500';
+        message.className = `p-4 ${bgColor} border-l-4 ${borderColor} rounded-xl`;
+        message.innerHTML = text;
+        message.classList.remove('hidden');
+    }
+</script>
+{% endblock %}

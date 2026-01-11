@@ -1,0 +1,257 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Account Settings - Admin{% endblock %}
+{% block mobile_title %}Account{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Admin Account Settings</h1>
+    
+    <!-- Success/Error Messages -->
+    <div id="message-container" class="mb-6 hidden">
+        <div id="message-alert" class="rounded-2xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <svg id="message-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                <span id="message-text" class="font-medium"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Account Information -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Current Account Information
+        </h2>
+        
+        <div class="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-xl p-6">
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Email Address</p>
+                    <p class="text-lg font-semibold text-gray-800">{{ admin_user.email }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Account Type</p>
+                    <p class="text-lg font-semibold text-cyan-600">Administrator</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Email Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            Change Email Address
+        </h2>
+        <p class="text-sm text-gray-600 mb-6">Update your admin account email address. You'll need to enter your current password to confirm.</p>
+        
+        <form id="email-form" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">New Email Address</label>
+                <input type="email" name="new_email" required
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm"
+                       placeholder="admin@example.com">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                <input type="password" name="current_password" required
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm"
+                       placeholder="Enter your current password">
+            </div>
+            
+            <button type="submit" 
+                    class="w-full md:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition duration-200 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Update Email
+            </button>
+        </form>
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            Change Password
+        </h2>
+        <p class="text-sm text-gray-600 mb-6">Update your admin account password. Choose a strong password with at least 8 characters.</p>
+        
+        <form id="password-form" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+                <input type="password" name="current_password" required
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 shadow-sm"
+                       placeholder="Enter your current password">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                <input type="password" name="new_password" required minlength="8"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 shadow-sm"
+                       placeholder="Enter new password (min 8 characters)">
+                <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+                <input type="password" name="confirm_password" required minlength="8"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 shadow-sm"
+                       placeholder="Confirm your new password">
+            </div>
+            
+            <button type="submit" 
+                    class="w-full md:w-auto px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition duration-200 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Update Password
+            </button>
+        </form>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6">
+        <div class="flex items-start gap-4">
+            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Security Notice</h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Keep your login credentials secure and never share them with anyone</li>
+                    <li>• Use a strong, unique password for your admin account</li>
+                    <li>• Changing your password will not log you out of your current session</li>
+                    <li>• All account changes are logged for security purposes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show message helper
+function showMessage(message, isSuccess) {
+    const container = document.getElementById('message-container');
+    const alert = document.getElementById('message-alert');
+    const icon = document.getElementById('message-icon');
+    const text = document.getElementById('message-text');
+    
+    container.classList.remove('hidden');
+    
+    if (isSuccess) {
+        alert.className = 'rounded-2xl p-4 shadow-lg bg-green-100 border-2 border-green-300';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+        icon.className = 'w-6 h-6 text-green-600';
+    } else {
+        alert.className = 'rounded-2xl p-4 shadow-lg bg-red-100 border-2 border-red-300';
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+        icon.className = 'w-6 h-6 text-red-600';
+    }
+    
+    text.textContent = message;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        container.classList.add('hidden');
+    }, 5000);
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Handle email form submission
+document.getElementById('email-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const button = e.target.querySelector('button[type="submit"]');
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Updating...';
+    
+    try {
+        const response = await fetch('/admin/account/update-email', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage(data.message, true);
+            e.target.reset();
+            // Reload page after 2 seconds to show new email
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showMessage(data.message, false);
+        }
+    } catch (error) {
+        showMessage('An error occurred. Please try again.', false);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+});
+
+// Handle password form submission
+document.getElementById('password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const button = e.target.querySelector('button[type="submit"]');
+    const originalText = button.innerHTML;
+    
+    // Client-side validation
+    const newPassword = formData.get('new_password');
+    const confirmPassword = formData.get('confirm_password');
+    
+    if (newPassword !== confirmPassword) {
+        showMessage('New passwords do not match', false);
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        showMessage('Password must be at least 8 characters long', false);
+        return;
+    }
+    
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Updating...';
+    
+    try {
+        const response = await fetch('/admin/account/update-password', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage(data.message, true);
+            e.target.reset();
+        } else {
+            showMessage(data.message, false);
+        }
+    } catch (error) {
+        showMessage('An error occurred. Please try again.', false);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+});
+</script>
+{% endblock %}

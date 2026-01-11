@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publisher Login</title>
+    {% if app_favicon %}
+    <link rel="icon" type="image/x-icon" href="/static/{{ app_favicon }}">
+    <link rel="shortcut icon" type="image/x-icon" href="/static/{{ app_favicon }}">
+    {% endif %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-white font-sans">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Publisher Login</h1>
+                
+                {% if error %}
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl">
+                    <p class="text-red-700 text-sm">{{ error }}</p>
+                </div>
+                {% endif %}
+                
+                <form id="loginForm" method="POST" action="/login" class="space-y-5">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" id="public_key" value="{{ public_key }}">
+                    <input type="hidden" id="encrypted_data" name="encrypted_data" value="">
+                    
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                        <input type="email" id="email" name="email" required maxlength="254" autocomplete="email"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                    </div>
+                    
+                    <button type="submit"
+                            class="w-full bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                        Login
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-gray-600 text-sm">
+                        Don't have an account? 
+                        <a href="/register" class="text-cyan-600 font-semibold hover:text-cyan-700 hover:underline transition duration-200">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // RSA-OAEP Encryption using Web Crypto API
+        async function importPublicKey(pemKey) {
+            // Remove PEM header/footer and whitespace
+            const pemContents = pemKey
+                .replace('-----BEGIN PUBLIC KEY-----', '')
+                .replace('-----END PUBLIC KEY-----', '')
+                .replace(/\s/g, '');
+            
+            // Convert base64 to binary
+            const binaryDer = atob(pemContents);
+            const binaryDerArray = new Uint8Array(binaryDer.length);
+            for (let i = 0; i < binaryDer.length; i++) {
+                binaryDerArray[i] = binaryDer.charCodeAt(i);
+            }
+            
+            // Import the key
+            return await crypto.subtle.importKey(
+                'spki',
+                binaryDerArray.buffer,
+                {
+                    name: 'RSA-OAEP',
+                    hash: 'SHA-256'
+                },
+                false,
+                ['encrypt']
+            );
+        }
+        
+        async function encryptData(data, publicKeyPem) {
+            try {
+                // Import public key
+                const publicKey = await importPublicKey(publicKeyPem);
+                
+                // Convert data to ArrayBuffer
+                const encoder = new TextEncoder();
+                const dataBuffer = encoder.encode(data);
+                
+                // Encrypt the data with RSA-OAEP
+                const encrypted = await crypto.subtle.encrypt(
+                    {
+                        name: 'RSA-OAEP'
+                    },
+                    publicKey,
+                    dataBuffer
+                );
+                
+                // Convert to base64
+                const encryptedArray = new Uint8Array(encrypted);
+                return btoa(String.fromCharCode(...encryptedArray));
+            } catch (error) {
+                console.error('Encryption error:', error);
+                throw error;
+            }
+        }
+        
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const publicKey = document.getElementById('public_key').value;
+            
+            if (!publicKey) {
+                alert('Public key not found. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                // Create JSON payload
+                const payload = JSON.stringify({
+                    email: email,
+                    password: password
+                });
+                
+                // Encrypt the payload with RSA
+                const encryptedData = await encryptData(payload, publicKey);
+                
+                // Set encrypted data in hidden field
+                document.getElementById('encrypted_data').value = encryptedData;
+                
+                // Clear original fields for security
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                
+                // Submit the form
+                this.submit();
+            } catch (error) {
+                alert('Encryption failed. Please try again.');
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

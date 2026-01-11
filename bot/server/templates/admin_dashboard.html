@@ -1,0 +1,435 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block mobile_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Admin Dashboard</h1>
+    
+    <!-- System Performance Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">System Performance</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Server Health -->
+            <div class="bg-gradient-to-br from-{% if server_health >= 80 %}green{% elif server_health >= 60 %}yellow{% else %}red{% endif %}-500 to-{% if server_health >= 80 %}green{% elif server_health >= 60 %}yellow{% else %}red{% endif %}-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Server Health</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">{{ server_health }}%</p>
+                <p class="text-xs mt-2 opacity-80">{% if server_health >= 80 %}Excellent{% elif server_health >= 60 %}Good{% else %}Needs Attention{% endif %}</p>
+            </div>
+            
+            <!-- CPU Usage -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">CPU Usage</h3>
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-800">{{ cpu_percent }}%</p>
+                <div class="mt-2 bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: {{ cpu_percent }}%"></div>
+                </div>
+            </div>
+            
+            <!-- Memory Usage -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Memory Usage</h3>
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-800">{{ memory_percent }}%</p>
+                <div class="mt-2 bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-500 h-2 rounded-full" style="width: {{ memory_percent }}%"></div>
+                </div>
+            </div>
+            
+            <!-- Storage -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Storage</h3>
+                    <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold text-gray-800">{{ disk_percent }}%</p>
+                <p class="text-xs text-gray-500 mt-1">{{ disk_free_gb }}GB free of {{ disk_total_gb }}GB</p>
+                <div class="mt-2 bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-500 h-2 rounded-full" style="width: {{ disk_percent }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Revenue Overview -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Revenue Overview</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg p-6 text-white">
+                <h3 class="text-sm font-semibold opacity-90 mb-2">Today's Revenue</h3>
+                <p class="text-4xl font-bold">${{ today_revenue }}</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl shadow-lg p-6 text-white">
+                <h3 class="text-sm font-semibold opacity-90 mb-2">Monthly Revenue</h3>
+                <p class="text-4xl font-bold">${{ month_revenue }}</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white">
+                <h3 class="text-sm font-semibold opacity-90 mb-2">Total Revenue</h3>
+                <p class="text-4xl font-bold">${{ estimated_total_revenue }}</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl shadow-lg p-6 text-white">
+                <h3 class="text-sm font-semibold opacity-90 mb-2">Publisher Balance</h3>
+                <p class="text-4xl font-bold">${{ total_balance }}</p>
+                {% if pending_withdrawals > 0 %}
+                <p class="text-xs mt-2 opacity-80">{{ pending_withdrawals }} pending withdrawals</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Link Generation Statistics -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Link Generation Statistics</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Today's Links</h3>
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ today_links }}</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">This Month</h3>
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ month_links }}</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Total Links</h3>
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ total_links }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Impression Statistics -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Impression & User Statistics</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-cyan-500">
+                <h3 class="text-sm font-semibold text-gray-600 mb-2">Today's Impressions</h3>
+                <p class="text-4xl font-bold text-cyan-600">{{ today_impressions }}</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-indigo-500">
+                <h3 class="text-sm font-semibold text-gray-600 mb-2">Monthly Impressions</h3>
+                <p class="text-4xl font-bold text-indigo-600">{{ month_impressions }}</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-pink-500">
+                <h3 class="text-sm font-semibold text-gray-600 mb-2">Total Impressions</h3>
+                <p class="text-4xl font-bold text-pink-600">{{ total_impressions }}</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
+                <h3 class="text-sm font-semibold text-gray-600 mb-2">Active Users (7d)</h3>
+                <p class="text-4xl font-bold text-yellow-600">{{ active_users }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subscription & Payment Statistics -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Subscription & Payment Statistics</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Total Subscriptions</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">{{ total_subscriptions }}</p>
+                <p class="text-xs mt-2 opacity-80">{{ completed_subscriptions }} completed</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Active Subscriptions</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">{{ active_subscriptions }}</p>
+                <p class="text-xs mt-2 opacity-80">Currently active</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Pending Payments</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">{{ pending_payments }}</p>
+                <p class="text-xs mt-2 opacity-80">Awaiting confirmation</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Total Revenue</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">${{ total_subscription_revenue }}</p>
+                <p class="text-xs mt-2 opacity-80">Today: ${{ today_subscription_revenue }} | Month: ${{ month_subscription_revenue }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Support & Management -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Support & Management</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-cyan-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Support Tickets</h3>
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ total_tickets }}</p>
+                <p class="text-xs mt-2"><span class="text-orange-600">{{ open_tickets }} open</span> | <span class="text-yellow-600">{{ pending_tickets }} pending</span></p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-teal-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Active Ad Networks</h3>
+                    <svg class="w-6 h-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ active_ad_networks }}</p>
+                <p class="text-xs text-gray-500 mt-2">Configured networks</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Helper Bots</h3>
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ active_bots }}</p>
+                <p class="text-xs text-gray-500 mt-2">Active helper bots</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Referral System -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Referral System</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Total Referrals</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">{{ total_referrals }}</p>
+                <p class="text-xs mt-2 opacity-80">Publishers referred</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold opacity-90">Referral Earnings</h3>
+                    <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold">${{ total_referral_earnings }}</p>
+                <p class="text-xs mt-2 opacity-80">Total paid to referrers</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Overview -->
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">System Overview</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Total Publishers</h3>
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ publisher_count }}</p>
+                <p class="text-xs text-green-600 mt-2">{{ active_publisher_count }} active</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Total Files</h3>
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ file_count }}</p>
+                <p class="text-xs text-gray-500 mt-2">Uploaded files</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Today's Files</h3>
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ today_files_uploaded }}</p>
+                <p class="text-xs text-gray-500 mt-2">Uploaded today</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-gray-600">Pending Withdrawals</h3>
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-4xl font-bold text-gray-800">{{ pending_withdrawals }}</p>
+                <p class="text-xs text-gray-500 mt-2">Awaiting approval</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Performing Files -->
+    {% if top_files %}
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Top Performing Files</h2>
+        
+        <div class="overflow-x-auto -mx-6 sm:mx-0">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rank</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">File Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Access Code</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Impressions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for file in top_files %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {% if loop.index == 1 %}bg-yellow-100 text-yellow-800{% elif loop.index == 2 %}bg-gray-100 text-gray-800{% elif loop.index == 3 %}bg-orange-100 text-orange-800{% else %}bg-gray-50 text-gray-600{% endif %} font-bold text-sm">
+                                    {{ loop.index }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="text-sm font-medium text-gray-800 max-w-xs truncate">{{ file.filename }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <code class="px-2 py-1 bg-gray-100 rounded text-xs font-mono text-gray-700">{{ file.access_code }}</code>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800">
+                                    {{ file.impression_count }} views
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Publishers -->
+    {% if recent_publishers %}
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Recent Publishers</h2>
+        
+        <div class="overflow-x-auto -mx-6 sm:mx-0">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Balance</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for publisher in recent_publishers %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-800">{{ publisher.email }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                                <div class="text-sm font-semibold text-green-600">${{ "%.2f"|format(publisher.balance) }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if publisher.is_admin %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800">Admin</span>
+                                {% else %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Publisher</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if publisher.is_active %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                                {% else %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 hidden lg:table-cell">
+                                {{ publisher.created_at.strftime('%Y-%m-%d') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <a href="/admin/publishers" class="inline-flex items-center px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition duration-200 shadow-md hover:shadow-lg">
+                View All Publishers
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

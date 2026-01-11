@@ -1,0 +1,476 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Settings - Admin{% endblock %}
+{% block mobile_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-8">Application Settings</h1>
+    
+    <form method="POST" action="/admin/settings/update" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Website Settings</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Website Name</label>
+                    <input type="text" name="website_name" 
+                           value="{{ settings.website_name or 'CloudShare Pro' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="CloudShare Pro">
+                    <p class="text-xs text-gray-500 mt-2">Enter the name of your website.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Branding</h2>
+            <p class="text-sm text-gray-600 mb-6">Upload your logo and favicon for consistent branding across the platform</p>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Logo</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-cyan-400 transition">
+                        <div id="logo-container" class="mb-4">
+                            {% if settings.logo_path %}
+                            <img id="current-logo" src="/static/{{ settings.logo_path }}" alt="Current Logo" class="max-h-24 mx-auto rounded-lg">
+                            <p id="current-logo-label" class="text-xs text-gray-500 mt-2">Current Logo</p>
+                            {% endif %}
+                            <img id="logo-preview" src="#" alt="Logo Preview" class="max-h-24 mx-auto rounded-lg hidden">
+                            <p id="logo-preview-label" class="text-xs text-gray-500 mt-2 hidden">New Logo Preview</p>
+                        </div>
+                        <input type="file" name="logo" id="logo" accept="image/*" class="hidden" onchange="showFileName('logo')">
+                        <label for="logo" class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg cursor-pointer transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Choose Logo
+                        </label>
+                        <p class="text-xs text-gray-500 mt-2" id="logo_filename">PNG, JPG, SVG, WebP (Recommended: 200x50px)</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Favicon</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-cyan-400 transition">
+                        <div id="favicon-container" class="mb-4">
+                            {% if settings.favicon_path %}
+                            <img id="current-favicon" src="/static/{{ settings.favicon_path }}" alt="Current Favicon" class="max-h-16 mx-auto rounded-lg">
+                            <p id="current-favicon-label" class="text-xs text-gray-500 mt-2">Current Favicon</p>
+                            {% endif %}
+                            <img id="favicon-preview" src="#" alt="Favicon Preview" class="max-h-16 mx-auto rounded-lg hidden">
+                            <p id="favicon-preview-label" class="text-xs text-gray-500 mt-2 hidden">New Favicon Preview</p>
+                        </div>
+                        <input type="file" name="favicon" id="favicon" accept="image/*,.ico" class="hidden" onchange="showFileName('favicon')">
+                        <label for="favicon" class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg cursor-pointer transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Choose Favicon
+                        </label>
+                        <p class="text-xs text-gray-500 mt-2" id="favicon_filename">ICO, PNG (Recommended: 32x32px or 64x64px)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                Maintenance Mode
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Enable maintenance mode to temporarily block non-admin access to the website</p>
+            
+            <div class="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="maintenance_mode" class="sr-only peer" {% if settings.maintenance_mode %}checked{% endif %}>
+                            <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                            <span class="maintenance-status">{% if settings.maintenance_mode %}Maintenance Mode is ON{% else %}Maintenance Mode is OFF{% endif %}</span>
+                        </h3>
+                        <p class="text-sm text-gray-700">
+                            When enabled, all non-admin users will see a maintenance page. Admin users can still access the entire platform.
+                        </p>
+                        <div class="mt-4 bg-white bg-opacity-50 rounded-lg p-3 border border-orange-300">
+                            <p class="text-xs text-gray-700 font-medium">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Use this when performing critical updates or system maintenance
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Terms of Service</h2>
+            <p class="text-sm text-gray-600 mb-4">This content will be displayed on the Terms of Service page</p>
+            <textarea name="terms_of_service" rows="10" 
+                      class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                      placeholder="Enter Terms of Service content...">{{ settings.terms_of_service or '' }}</textarea>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Privacy Policy</h2>
+            <p class="text-sm text-gray-600 mb-4">This content will be displayed on the Privacy Policy page</p>
+            <textarea name="privacy_policy" rows="10" 
+                      class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                      placeholder="Enter Privacy Policy content...">{{ settings.privacy_policy or '' }}</textarea>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Publisher Earnings Settings</h2>
+            <p class="text-sm text-gray-600 mb-6">Set the earning rate per impression for publishers</p>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <label class="text-sm font-semibold text-gray-700 min-w-fit">Per Impression Rate (USD):</label>
+                    <div class="relative flex-1 max-w-xs">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold z-10">$</span>
+                        <input type="number" name="impression_rate" step="0.0001" min="0" 
+                               value="{{ (settings.impression_rate if settings.impression_rate is not none else 0) | round(4) }}"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                               placeholder="0.0000">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500">Example: $0.001 means publishers earn $0.001 for each impression</p>
+                
+                <div class="flex items-center gap-4 pt-4 border-t border-gray-200">
+                    <label class="text-sm font-semibold text-gray-700 min-w-fit">Impression Cutback (%):</label>
+                    <div class="relative flex-1 max-w-xs">
+                        <input type="number" name="impression_cutback_percentage" step="0.01" min="0" max="100" 
+                               value="{{ (settings.impression_cutback_percentage if settings.impression_cutback_percentage is not none else 0) | round(2) }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                               placeholder="0.00">
+                        <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">%</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500">Percentage of impressions to cut back. Example: 10% means only 900 out of 1000 postbacks will be tracked</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Web Upload Limits</h2>
+            <p class="text-sm text-gray-600 mb-6">Configure upload limits for web interface (Telegram bot has no limits)</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Maximum File Size (MB)</label>
+                    <input type="number" name="web_max_file_size_mb" min="1" max="10000"
+                           value="{{ settings.web_max_file_size_mb or 2048 }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="2048">
+                    <p class="text-xs text-gray-500 mt-2">Maximum file size allowed for web uploads (default: 2048 MB = 2 GB)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Rate Limit</label>
+                    <input type="number" name="web_upload_rate_limit" min="1" max="1000"
+                           value="{{ settings.web_upload_rate_limit or 10 }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="10">
+                    <p class="text-xs text-gray-500 mt-2">Maximum number of uploads allowed per time window (default: 10)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Rate Window (seconds)</label>
+                    <input type="number" name="web_upload_rate_window" min="60" max="86400"
+                           value="{{ settings.web_upload_rate_window or 3600 }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="3600">
+                    <p class="text-xs text-gray-500 mt-2">Time window in seconds for upload rate limit (default: 3600 = 1 hour)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">API Rate Limits</h2>
+            <p class="text-sm text-gray-600 mb-6">Configure rate limits for API endpoints</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">API Request Limit</label>
+                    <input type="number" name="api_rate_limit" min="1" max="10000"
+                           value="{{ settings.api_rate_limit or 100 }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="100">
+                    <p class="text-xs text-gray-500 mt-2">Maximum number of API requests allowed per time window (default: 100)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">API Rate Window (seconds)</label>
+                    <input type="number" name="api_rate_window" min="60" max="86400"
+                           value="{{ settings.api_rate_window or 3600 }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="3600">
+                    <p class="text-xs text-gray-500 mt-2">Time window in seconds for API rate limit (default: 3600 = 1 hour)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Android App Settings</h2>
+            <p class="text-sm text-gray-600 mb-6">Configure the Android app for video playback via deep links</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Package Name</label>
+                    <input type="text" name="android_package_name" 
+                           value="{{ settings.android_package_name or '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="com.example.videoapp">
+                    <p class="text-xs text-gray-500 mt-2">Your Android app's package name (e.g., com.yourcompany.videoapp)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Deep Link Scheme</label>
+                    <input type="text" name="android_deep_link_scheme" 
+                           value="{{ settings.android_deep_link_scheme or '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="videoapp">
+                    <p class="text-xs text-gray-500 mt-2">Your app's deep link scheme (e.g., videoapp, myapp)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                Paytm Payment Gateway
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Configure Paytm credentials for subscription payments</p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-sm text-blue-700">
+                        These credentials are used to generate QR codes and verify payment transactions. Get them from your Paytm Business Dashboard.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Merchant ID (MID)</label>
+                    <input type="text" name="paytm_mid" 
+                           value="{{ settings.paytm_mid or '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm font-mono"
+                           placeholder="YPmDaE77343596088265">
+                    <p class="text-xs text-gray-500 mt-2">Your Paytm Merchant ID from the Business Dashboard</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">UPI ID</label>
+                    <input type="text" name="paytm_upi_id" 
+                           value="{{ settings.paytm_upi_id or '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm font-mono"
+                           placeholder="paytmqr5o3u7t@ptys">
+                    <p class="text-xs text-gray-500 mt-2">Your UPI ID for receiving payments (format: xxxxx@ptys or xxxxx@paytm)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Business Name / Unit ID</label>
+                    <input type="text" name="paytm_unit_id" 
+                           value="{{ settings.paytm_unit_id or '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm"
+                           placeholder="YOUR BUSINESS NAME">
+                    <p class="text-xs text-gray-500 mt-2">Business name shown to customers during payment</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Paytm Signature (Optional)</label>
+                    <textarea name="paytm_signature" rows="3"
+                              class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm font-mono text-xs"
+                              placeholder="AAuN7izDWN5cb8A5scnUiNME+LkZqI2DWgkXlN1Mco...">{{ settings.paytm_signature or '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-2">Signature for Paytm app deep linking (optional, for direct Paytm app payment)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                IPQualityScore Integration
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">Configure IPQualityScore for impression counting and fraud detection</p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-sm text-blue-700">
+                        <p class="font-semibold mb-1">Get your API credentials from ipqualityscore.com</p>
+                        <p>The API Key is used for server-side verification. The Secret Key is used for client-side device fingerprinting.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="text-sm font-semibold text-gray-700">Enable IPQS Impression Tracking</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="ipqs_enabled" class="sr-only peer" {% if settings.ipqs_enabled %}checked{% endif %}>
+                            <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500">When enabled, impressions will be verified using IPQualityScore before counting</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">IPQS API Key</label>
+                    <div class="relative">
+                        <input type="password" name="ipqs_api_key" id="ipqs_api_key"
+                               value="{{ settings.ipqs_api_key or '' }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm font-mono pr-12"
+                               placeholder="Enter your IPQS API Key">
+                        <button type="button" onclick="toggleTokenVisibility('ipqs_api_key')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <svg class="w-5 h-5 show-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg class="w-5 h-5 hide-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Your IPQS API Key for server-side verification requests</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">IPQS Secret Key (for Device Fingerprinting)</label>
+                    <div class="relative">
+                        <input type="password" name="ipqs_secret_key" id="ipqs_secret_key"
+                               value="{{ settings.ipqs_secret_key or '' }}"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm font-mono pr-12"
+                               placeholder="Enter your IPQS Secret Key">
+                        <button type="button" onclick="toggleTokenVisibility('ipqs_secret_key')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <svg class="w-5 h-5 show-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg class="w-5 h-5 hide-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Secret Key for client-side JavaScript device fingerprinting (used in mobile apps)</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end">
+            <button type="submit" 
+                    class="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function showFileName(inputId) {
+    const fileInput = document.getElementById(inputId);
+    const fileNameDisplay = document.getElementById(inputId + '_filename');
+    
+    if (fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        fileNameDisplay.textContent = 'Selected: ' + fileName;
+        fileNameDisplay.classList.add('text-cyan-600', 'font-semibold');
+
+        // Preview for logo
+        if (inputId === 'logo') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('logo-preview');
+                const previewLabel = document.getElementById('logo-preview-label');
+                const currentLogo = document.getElementById('current-logo');
+                const currentLogoLabel = document.getElementById('current-logo-label');
+                
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if (previewLabel) previewLabel.classList.remove('hidden');
+                    
+                    // Hide old logo
+                    if (currentLogo) currentLogo.classList.add('hidden');
+                    if (currentLogoLabel) currentLogoLabel.classList.add('hidden');
+                }
+            }
+            reader.readAsDataURL(fileInput.files[0]);
+        } else if (inputId === 'favicon') {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('favicon-preview');
+                const previewLabel = document.getElementById('favicon-preview-label');
+                const currentFavicon = document.getElementById('current-favicon');
+                const currentFaviconLabel = document.getElementById('current-favicon-label');
+                
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    if (previewLabel) previewLabel.classList.remove('hidden');
+                    
+                    // Hide old favicon
+                    if (currentFavicon) currentFavicon.classList.add('hidden');
+                    if (currentFaviconLabel) currentFaviconLabel.classList.add('hidden');
+                }
+            }
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+    }
+}
+
+function toggleTokenVisibility(inputId) {
+    const tokenInput = document.getElementById(inputId);
+    const container = tokenInput.closest('.relative');
+    const showIcon = container.querySelector('.show-icon');
+    const hideIcon = container.querySelector('.hide-icon');
+    
+    if (tokenInput.type === 'password') {
+        tokenInput.type = 'text';
+        showIcon.classList.add('hidden');
+        hideIcon.classList.remove('hidden');
+    } else {
+        tokenInput.type = 'password';
+        showIcon.classList.remove('hidden');
+        hideIcon.classList.add('hidden');
+    }
+}
+
+function generateToken(inputId) {
+    const tokenInput = document.getElementById(inputId);
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 64; i++) {
+        token += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    tokenInput.value = token;
+    tokenInput.type = 'text';
+    
+    const container = tokenInput.closest('.relative');
+    const showIcon = container.querySelector('.show-icon');
+    const hideIcon = container.querySelector('.hide-icon');
+    showIcon.classList.add('hidden');
+    hideIcon.classList.remove('hidden');
+}
+</script>
+{% endblock %}

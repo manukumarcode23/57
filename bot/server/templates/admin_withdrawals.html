@@ -1,0 +1,309 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Withdrawal Management - Admin Panel{% endblock %}
+{% block mobile_title %}Withdrawals{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 class="hidden lg:block text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Withdrawal Management</h1>
+        
+        <!-- Filter -->
+        <div class="flex items-center gap-3">
+            <label for="statusFilter" class="text-sm font-semibold text-gray-700">Filter:</label>
+            <select id="statusFilter" onchange="window.location.href='/admin/withdrawals?status=' + this.value" 
+                    class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Requests</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+    </div>
+    
+    {% if request.args.get('success') %}
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+        <p class="text-green-700 font-semibold">{{ request.args.get('success') }}</p>
+    </div>
+    {% endif %}
+    
+    {% if request.args.get('error') %}
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+        <p class="text-red-700 font-semibold">{{ request.args.get('error') }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Minimum Withdrawal Settings -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl shadow-lg p-6 border border-cyan-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Withdrawal Limits
+            </h2>
+            <form method="POST" action="/admin/withdrawal/update-minimum" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Minimum Amount (USD)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 font-semibold z-10">$</span>
+                        <input type="number" name="minimum_withdrawal" step="0.01" min="0" 
+                               value="{{ (minimum_withdrawal if minimum_withdrawal is not none else 10.0) | round(2) }}"
+                               class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition duration-200 shadow-sm">
+                    </div>
+                </div>
+                <button type="submit" 
+                        class="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl transition duration-200 shadow-md">
+                    Update Setting
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-lg p-6 border border-purple-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Request Control
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">Enable or disable new withdrawal requests for all publishers</p>
+            
+            <div class="flex items-center justify-between p-4 bg-white bg-opacity-60 rounded-xl border border-purple-100">
+                <div>
+                    <p class="text-sm font-bold text-gray-800">Withdrawal Requests</p>
+                    <p class="text-xs text-gray-500">Currently: <span class="font-bold {% if withdrawal_enabled %}text-green-600{% else %}text-red-600{% endif %}">{% if withdrawal_enabled %}ENABLED{% else %}DISABLED{% endif %}</span></p>
+                </div>
+                <form method="POST" action="/admin/withdrawal/toggle-requests">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" 
+                            class="px-6 py-2 rounded-xl font-bold text-white transition duration-200 shadow-md {% if withdrawal_enabled %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %}">
+                        {% if withdrawal_enabled %}Disable{% else %}Enable{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">Pending Requests</h3>
+            <p class="text-4xl font-bold text-yellow-600">{{ total_pending }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">Approved</h3>
+            <p class="text-4xl font-bold text-green-600">{{ total_approved }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">Rejected</h3>
+            <p class="text-4xl font-bold text-red-600">{{ total_rejected }}</p>
+        </div>
+    </div>
+    
+    <!-- Withdrawal Requests Table -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Withdrawal Requests</h2>
+        
+        {% if withdrawal_data %}
+        <div class="overflow-x-auto -mx-6 sm:mx-0">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Publisher</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Bank Details</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Requested</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in withdrawal_data %}
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-800">{{ item.publisher.email if item.publisher else 'N/A' }}</div>
+                                <div class="text-xs text-gray-500">Balance: ${{ "%.2f"|format(item.publisher.balance if item.publisher else 0) }}</div>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-cyan-600">${{ "%.2f"|format(item.withdrawal.amount) }}</div>
+                            </td>
+                            <td class="px-4 py-4 hidden md:table-cell">
+                                {% if item.bank_account %}
+                                <div class="text-sm font-semibold text-gray-800">{{ item.bank_account.bank_name or 'No Bank Name' }}</div>
+                                <div class="text-xs text-gray-600">Acc: {{ item.bank_account.account_number or 'N/A' }}</div>
+                                <div class="text-xs text-gray-600">IFSC: {{ item.bank_account.ifsc_code or 'N/A' }}</div>
+                                <div class="text-xs text-gray-600">Branch: {{ item.bank_account.branch_name or 'N/A' }}</div>
+                                <div class="mt-2 pt-2 border-t border-gray-100">
+                                    <div class="text-xs font-semibold text-cyan-600">Crypto Wallets:</div>
+                                    <div class="text-xs text-gray-600">TRC20: <span class="font-mono text-[10px]">{{ item.bank_account.trc20_address or 'Not set' }}</span></div>
+                                    <div class="text-xs text-gray-600">BEP20: <span class="font-mono text-[10px]">{{ item.bank_account.bep20_address or 'Not set' }}</span></div>
+                                </div>
+                                {% else %}
+                                <div class="text-sm text-gray-500">No payment info</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if item.withdrawal.status == 'pending' %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                {% elif item.withdrawal.status == 'approved' %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                                {% elif item.withdrawal.status == 'rejected' %}
+                                <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 hidden lg:table-cell">
+                                {{ item.withdrawal.requested_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                {% if item.withdrawal.status == 'pending' %}
+                                <div class="flex gap-2">
+                                    <button onclick="showApproveModal({{ item.withdrawal.id }}, '{{ item.publisher.email if item.publisher else '' }}', {{ item.withdrawal.amount }})"
+                                            class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-500 hover:bg-green-600 text-white transition duration-200">
+                                        Approve
+                                    </button>
+                                    <button onclick="showRejectModal({{ item.withdrawal.id }}, '{{ item.publisher.email if item.publisher else '' }}', {{ item.withdrawal.amount }})"
+                                            class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500 hover:bg-red-600 text-white transition duration-200">
+                                        Reject
+                                    </button>
+                                </div>
+                                {% else %}
+                                <button onclick="showDetailsModal({{ item.withdrawal.id }}, '{{ item.withdrawal.admin_note or 'No note provided' }}', '{{ item.withdrawal.processed_at.strftime('%Y-%m-%d %H:%M') if item.withdrawal.processed_at else '' }}')"
+                                        class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-500 hover:bg-gray-600 text-white transition duration-200">
+                                    Details
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+            </svg>
+            <p class="mt-4 text-gray-600">No withdrawal requests found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Approve Withdrawal</h3>
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">Publisher: <span id="approvePublisher" class="font-semibold text-gray-800"></span></p>
+            <p class="text-sm text-gray-600">Amount: <span id="approveAmount" class="font-semibold text-green-600"></span></p>
+        </div>
+        <form id="approveForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="mb-4">
+                <label for="approveNote" class="block text-sm font-semibold text-gray-700 mb-2">Admin Note (Optional)</label>
+                <textarea id="approveNote" name="admin_note" rows="3" 
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
+                          placeholder="Add a note about this approval..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Approve
+                </button>
+                <button type="button" onclick="closeApproveModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Reject Withdrawal</h3>
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">Publisher: <span id="rejectPublisher" class="font-semibold text-gray-800"></span></p>
+            <p class="text-sm text-gray-600">Amount: <span id="rejectAmount" class="font-semibold text-red-600"></span></p>
+        </div>
+        <form id="rejectForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="mb-4">
+                <label for="rejectNote" class="block text-sm font-semibold text-gray-700 mb-2">Rejection Reason</label>
+                <textarea id="rejectNote" name="admin_note" rows="3" required
+                          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent transition duration-200"
+                          placeholder="Provide a reason for rejection..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Reject
+                </button>
+                <button type="button" onclick="closeRejectModal()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-200">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Withdrawal Details</h3>
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-2">Processed: <span id="detailsProcessed" class="font-semibold text-gray-800"></span></p>
+            <p class="text-sm text-gray-600 mb-2">Admin Note:</p>
+            <div class="bg-gray-50 p-3 rounded-xl">
+                <p id="detailsNote" class="text-sm text-gray-700"></p>
+            </div>
+        </div>
+        <button type="button" onclick="closeDetailsModal()"
+                class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200">
+            Close
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Modal functions
+    function showApproveModal(id, publisher, amount) {
+        document.getElementById('approvePublisher').textContent = publisher;
+        document.getElementById('approveAmount').textContent = '$' + amount.toFixed(2);
+        document.getElementById('approveForm').action = '/admin/withdrawal/approve/' + id;
+        document.getElementById('approveModal').classList.remove('hidden');
+    }
+    
+    function closeApproveModal() {
+        document.getElementById('approveModal').classList.add('hidden');
+    }
+    
+    function showRejectModal(id, publisher, amount) {
+        document.getElementById('rejectPublisher').textContent = publisher;
+        document.getElementById('rejectAmount').textContent = '$' + amount.toFixed(2);
+        document.getElementById('rejectForm').action = '/admin/withdrawal/reject/' + id;
+        document.getElementById('rejectModal').classList.remove('hidden');
+    }
+    
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+    }
+    
+    function showDetailsModal(id, note, processed) {
+        document.getElementById('detailsNote').textContent = note;
+        document.getElementById('detailsProcessed').textContent = processed;
+        document.getElementById('detailsModal').classList.remove('hidden');
+    }
+    
+    function closeDetailsModal() {
+        document.getElementById('detailsModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

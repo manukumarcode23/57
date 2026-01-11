@@ -1,0 +1,417 @@
+{% extends "publisher_base.html" %}
+
+{% block title %}File Statistics{% endblock %}
+
+{% block mobile_title %}File Statistics{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-6 flex justify-between items-center">
+        <h1 class="hidden lg:block text-3xl font-bold text-gray-800">File Statistics</h1>
+        <a href="/publisher/videos" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition duration-200">
+            Back to Videos
+        </a>
+    </div>
+
+    {% for stat in files_stats %}
+    <div class="mb-8">
+        <!-- File Info Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 truncate">{{ stat.file.filename }}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 border-l-4 border-cyan-500">
+                    <p class="text-sm font-semibold text-gray-600 mb-1">Play Link</p>
+                    <a href="{{ base_url }}/play/{{ stat.file.access_code }}" 
+                       target="_blank" 
+                       class="text-sm text-cyan-600 hover:text-cyan-700 underline break-all">
+                        {{ base_url }}/play/{{ stat.file.access_code[:12] }}...
+                    </a>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border-l-4 border-blue-500">
+                    <p class="text-sm font-semibold text-gray-600 mb-1">File Size</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {% if stat.file.file_size >= 1073741824 %}
+                            {{ "%.2f"|format(stat.file.file_size / 1073741824) }} GB
+                        {% elif stat.file.file_size >= 1048576 %}
+                            {{ "%.2f"|format(stat.file.file_size / 1048576) }} MB
+                        {% else %}
+                            {{ "%.2f"|format(stat.file.file_size / 1024) }} KB
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-l-4 border-purple-500">
+                    <p class="text-sm font-semibold text-gray-600 mb-1">Upload Date</p>
+                    <p class="text-lg font-bold text-gray-800">{{ stat.file.created_at.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+            <!-- Total Impressions -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Total Impressions</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ "{:,}".format(stat.total_impressions) }}</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-3">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Earnings -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-emerald-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Total Earnings</p>
+                        <p class="text-3xl font-bold text-gray-800">${{ "%.2f"|format(stat.total_earnings) }}</p>
+                    </div>
+                    <div class="bg-emerald-100 rounded-full p-3">
+                        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Downloads -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-cyan-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">Total Downloads</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ "{:,}".format(stat.total_downloads) }}</p>
+                    </div>
+                    <div class="bg-cyan-100 rounded-full p-3">
+                        <svg class="w-8 h-8 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Impressions Chart -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-100">Impressions Over Time</h3>
+                <canvas id="impressionsChart{{ loop.index }}"></canvas>
+            </div>
+
+            <!-- Earnings Chart -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-100">Earnings Over Time</h3>
+                <canvas id="earningsChart{{ loop.index }}"></canvas>
+            </div>
+        </div>
+
+        <!-- Downloads Chart (Full Width) -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-100">Downloads Over Time</h3>
+            <canvas id="downloadsChart{{ loop.index }}"></canvas>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if files_stats|length > 1 %}
+    <!-- Comparison Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-gray-100">Comparison Overview</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Filename</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Impressions</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Earnings</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Downloads</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for stat in files_stats %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-4 py-4">
+                            <div class="text-sm font-medium text-gray-800 max-w-xs truncate">{{ stat.file.filename }}</div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <div class="text-sm text-gray-600">{{ "{:,}".format(stat.total_impressions) }}</div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <div class="text-sm text-gray-600">${{ "%.2f"|format(stat.total_earnings) }}</div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <div class="text-sm text-gray-600">{{ "{:,}".format(stat.total_downloads) }}</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Combined Comparison Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Impressions Comparison</h3>
+                <canvas id="comparisonImpressionsChart"></canvas>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Earnings Comparison</h3>
+                <canvas id="comparisonEarningsChart"></canvas>
+            </div>
+            <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Downloads Comparison</h3>
+                <canvas id="comparisonDownloadsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function initAllCharts() {
+        try {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js library not loaded');
+                setTimeout(initAllCharts, 100);
+                return;
+            }
+            
+            const chartColors = [
+                'rgba(99, 102, 241, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+            ];
+
+            const chartBorderColors = [
+                'rgba(99, 102, 241, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(239, 68, 68, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(236, 72, 153, 1)',
+            ];
+
+            {% for stat in files_stats %}
+            // Impressions Chart {{ loop.index }}
+            const impressionsCanvas{{ loop.index }} = document.getElementById('impressionsChart{{ loop.index }}');
+            if (impressionsCanvas{{ loop.index }}) {
+                new Chart(impressionsCanvas{{ loop.index }}, {
+        type: 'line',
+        data: {
+            labels: {{ stat.chart_labels | tojson }},
+            datasets: [{
+                label: 'Impressions',
+                data: {{ stat.chart_impressions | tojson }},
+                borderColor: 'rgba(139, 92, 246, 1)',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+                });
+            }
+
+            // Earnings Chart {{ loop.index }}
+            const earningsCanvas{{ loop.index }} = document.getElementById('earningsChart{{ loop.index }}');
+            if (earningsCanvas{{ loop.index }}) {
+                new Chart(earningsCanvas{{ loop.index }}, {
+        type: 'line',
+        data: {
+            labels: {{ stat.chart_labels | tojson }},
+            datasets: [{
+                label: 'Earnings ($)',
+                data: {{ stat.chart_earnings | tojson }},
+                borderColor: 'rgba(16, 185, 129, 1)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+                });
+            }
+
+            // Downloads Chart {{ loop.index }}
+            const downloadsCanvas{{ loop.index }} = document.getElementById('downloadsChart{{ loop.index }}');
+            if (downloadsCanvas{{ loop.index }}) {
+                new Chart(downloadsCanvas{{ loop.index }}, {
+        type: 'bar',
+        data: {
+            labels: {{ stat.chart_labels | tojson }},
+            datasets: [{
+                label: 'Downloads',
+                data: {{ stat.chart_downloads | tojson }},
+                borderColor: 'rgba(6, 182, 212, 1)',
+                backgroundColor: 'rgba(6, 182, 212, 0.6)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+                });
+            }
+            {% endfor %}
+
+            {% if files_stats|length > 1 %}
+            // Comparison Charts
+            const comparisonLabels = [{% for stat in files_stats %}'{{ stat.file.filename[:20] }}...'{% if not loop.last %}, {% endif %}{% endfor %}];
+            const comparisonImpressions = [{% for stat in files_stats %}{{ stat.total_impressions }}{% if not loop.last %}, {% endif %}{% endfor %}];
+            const comparisonEarnings = [{% for stat in files_stats %}{{ stat.total_earnings }}{% if not loop.last %}, {% endif %}{% endfor %}];
+            const comparisonDownloads = [{% for stat in files_stats %}{{ stat.total_downloads }}{% if not loop.last %}, {% endif %}{% endfor %}];
+
+            const comparisonImpressionsCanvas = document.getElementById('comparisonImpressionsChart');
+            if (comparisonImpressionsCanvas) {
+                new Chart(comparisonImpressionsCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: comparisonLabels,
+            datasets: [{
+                data: comparisonImpressions,
+                backgroundColor: chartColors,
+                borderColor: chartBorderColors,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+                });
+            }
+
+            const comparisonEarningsCanvas = document.getElementById('comparisonEarningsChart');
+            if (comparisonEarningsCanvas) {
+                new Chart(comparisonEarningsCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: comparisonLabels,
+            datasets: [{
+                data: comparisonEarnings,
+                backgroundColor: chartColors,
+                borderColor: chartBorderColors,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+                });
+            }
+
+            const comparisonDownloadsCanvas = document.getElementById('comparisonDownloadsChart');
+            if (comparisonDownloadsCanvas) {
+                new Chart(comparisonDownloadsCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: comparisonLabels,
+            datasets: [{
+                data: comparisonDownloads,
+                backgroundColor: chartColors,
+                borderColor: chartBorderColors,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+                });
+            }
+            {% endif %}
+            
+            console.log('All charts initialized successfully');
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAllCharts);
+    } else {
+        initAllCharts();
+    }
+</script>
+{% endblock %}

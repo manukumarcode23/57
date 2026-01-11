@@ -1,0 +1,322 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Cloudflare R2 Storage - Admin Panel{% endblock %}
+{% block mobile_title %}R2 Storage{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Cloudflare R2 Storage Management</h1>
+                <p class="text-gray-600">Manage Cloudflare R2 buckets for video storage</p>
+            </div>
+            <div class="flex items-center gap-4 mt-4 sm:mt-0">
+                <div class="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-xl border border-gray-200">
+                    <span class="text-sm font-semibold text-gray-700">Global R2:</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="globalR2Toggle" class="sr-only peer" {% if settings.r2_storage_enabled %}checked{% endif %} onchange="toggleGlobalR2()">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                    </label>
+                </div>
+                <button onclick="showAddModal()" class="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-xl font-semibold transition duration-200 shadow-lg">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add R2 Bucket
+                </button>
+            </div>
+        </div>
+
+        <div id="successMessage" class="hidden bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+            <p id="successText" class="text-green-700 font-semibold"></p>
+        </div>
+
+        <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+            <p id="errorText" class="text-red-700 font-semibold"></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 mr-3 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-sm text-gray-700">
+                    <strong>Cloudflare R2 Setup:</strong> Use R2 buckets to store videos and media files. You can add multiple bucket configurations and switch between them.
+                </div>
+            </div>
+        </div>
+
+        {% if r2_settings %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bucket Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Region</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for r2 in r2_settings %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ r2.bucket_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600 font-mono">{{ r2.account_id }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-600">{{ r2.region }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if r2.is_active %}
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            {% else %}
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ r2.created_at.strftime('%Y-%m-%d %H:%M') if r2.created_at else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex gap-2">
+                                <button onclick="testConnection({{ r2.id }})" class="text-blue-600 hover:text-blue-800" title="Test Connection">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="editR2({{ r2.id }}, '{{ r2.bucket_name }}', '{{ r2.account_id }}', '{{ r2.endpoint_url }}', '{{ r2.region }}')" class="text-purple-600 hover:text-purple-800" title="Edit">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="toggleR2({{ r2.id }})" class="{% if r2.is_active %}text-orange-600 hover:text-orange-800{% else %}text-green-600 hover:text-green-800{% endif %}" title="{% if r2.is_active %}Disable{% else %}Enable{% endif %}">
+                                    {% if r2.is_active %}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                    </svg>
+                                    {% else %}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    {% endif %}
+                                </button>
+                                <button onclick="deleteR2({{ r2.id }}, '{{ r2.bucket_name }}')" class="text-red-600 hover:text-red-800" title="Delete">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">No R2 buckets configured</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by adding your first Cloudflare R2 bucket</p>
+            <button onclick="showAddModal()" class="mt-4 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                Add R2 Bucket
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <h2 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-6">Add R2 Bucket</h2>
+        <form onsubmit="submitForm(event)">
+            <input type="hidden" id="r2Id" value="">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Bucket Name *</label>
+                <input type="text" id="bucketName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Account ID *</label>
+                <input type="text" id="accountId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Access Key ID *</label>
+                <input type="text" id="accessKeyId" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Secret Access Key *</label>
+                <input type="password" id="secretAccessKey" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Endpoint URL *</label>
+                <input type="url" id="endpointUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" placeholder="https://your-account.r2.cloudflarestorage.com" required>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                <input type="text" id="region" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent" value="us-east-1">
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showAddModal() {
+    document.getElementById('r2Id').value = '';
+    document.getElementById('modalTitle').textContent = 'Add R2 Bucket';
+    document.getElementById('bucketName').value = '';
+    document.getElementById('accountId').value = '';
+    document.getElementById('accessKeyId').value = '';
+    document.getElementById('secretAccessKey').value = '';
+    document.getElementById('endpointUrl').value = '';
+    document.getElementById('region').value = 'us-east-1';
+    document.getElementById('addModal').classList.remove('hidden');
+}
+
+function editR2(id, bucketName, accountId, endpointUrl, region) {
+    document.getElementById('r2Id').value = id;
+    document.getElementById('modalTitle').textContent = 'Edit R2 Bucket';
+    document.getElementById('bucketName').value = bucketName;
+    document.getElementById('accountId').value = accountId;
+    document.getElementById('endpointUrl').value = endpointUrl;
+    document.getElementById('region').value = region;
+    document.getElementById('accessKeyId').value = '';
+    document.getElementById('secretAccessKey').value = '';
+    document.getElementById('addModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('addModal').classList.add('hidden');
+}
+
+async function toggleGlobalR2() {
+    try {
+        const response = await fetch('/admin/r2-storage/global-toggle', { method: 'POST' });
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess(result.success);
+        } else {
+            showError(result.error);
+            // Revert checkbox state
+            document.getElementById('globalR2Toggle').checked = !document.getElementById('globalR2Toggle').checked;
+        }
+    } catch (error) {
+        showError(error.message);
+        document.getElementById('globalR2Toggle').checked = !document.getElementById('globalR2Toggle').checked;
+    }
+}
+
+async function submitForm(event) {
+    event.preventDefault();
+    const r2Id = document.getElementById('r2Id').value;
+    const data = {
+        bucket_name: document.getElementById('bucketName').value,
+        account_id: document.getElementById('accountId').value,
+        access_key_id: document.getElementById('accessKeyId').value,
+        secret_access_key: document.getElementById('secretAccessKey').value,
+        endpoint_url: document.getElementById('endpointUrl').value,
+        region: document.getElementById('region').value
+    };
+    
+    try {
+        const url = r2Id ? `/admin/r2-storage/${r2Id}` : '/admin/r2-storage/add';
+        const method = r2Id ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess(result.success);
+            closeModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showError(result.error);
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function toggleR2(id) {
+    try {
+        const response = await fetch(`/admin/r2-storage/${id}/toggle`, { method: 'POST' });
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess(result.success);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showError(result.error);
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function deleteR2(id, bucketName) {
+    if (!confirm(`Are you sure you want to delete the R2 bucket "${bucketName}"?`)) return;
+    
+    try {
+        const response = await fetch(`/admin/r2-storage/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess(result.success);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showError(result.error);
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function testConnection(id) {
+    try {
+        const response = await fetch(`/admin/r2-storage/${id}/test`, { method: 'POST' });
+        const result = await response.json();
+        if (response.ok) {
+            showSuccess(result.success);
+        } else {
+            showError(result.error);
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+function showSuccess(message) {
+    document.getElementById('successText').textContent = message;
+    document.getElementById('successMessage').classList.remove('hidden');
+    setTimeout(() => document.getElementById('successMessage').classList.add('hidden'), 4000);
+}
+
+function showError(message) {
+    document.getElementById('errorText').textContent = message;
+    document.getElementById('errorMessage').classList.remove('hidden');
+    setTimeout(() => document.getElementById('errorMessage').classList.add('hidden'), 4000);
+}
+</script>
+{% endblock %}

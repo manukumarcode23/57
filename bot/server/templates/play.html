@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Video</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 text-center">
+            <!-- Video Icon -->
+            <div class="mb-6">
+                <div class="mx-auto w-24 h-24 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Ready to Play</h1>
+            <p class="text-gray-600 mb-1">{{ filename }}</p>
+            <p class="text-sm text-gray-500 mb-8">Hash ID: {{ hash_id }}</p>
+            
+            {% if package_name and deep_link_scheme %}
+                <!-- Play in App Button -->
+                <button onclick="openInApp()" 
+                        class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transform hover:scale-105 transition duration-200 mb-4">
+                    <div class="flex items-center justify-center gap-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Play in App</span>
+                    </div>
+                </button>
+                
+                <!-- Fallback Info -->
+                <p class="text-xs text-gray-500 mb-4">
+                    Clicking will open the video in your app
+                </p>
+                
+                <!-- Alternative: Open in Browser (commented out for now) -->
+                <!--
+                <a href="#" class="text-sm text-cyan-600 hover:text-cyan-700 font-semibold">
+                    Play in Browser Instead
+                </a>
+                -->
+            {% else %}
+                <!-- Configuration Missing -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                    <p class="text-sm text-yellow-800">
+                        <strong>App not configured.</strong><br>
+                        Please configure the Android app settings in the admin panel.
+                    </p>
+                </div>
+            {% endif %}
+            
+            <!-- Hash ID Info -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-500">
+                    This link contains a unique hash ID that will be sent to the app for video playback.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openInApp() {
+            const hashId = "{{ hash_id }}";
+            const packageName = "{{ package_name }}";
+            const deepLinkScheme = "{{ deep_link_scheme }}";
+            
+            // Android Intent URL
+            const intentUrl = `intent://play?hash_id=${hashId}#Intent;scheme=${deepLinkScheme};package=${packageName};end`;
+            
+            // Try to open the app
+            window.location.href = intentUrl;
+            
+            // Fallback: If app is not installed, show message after a delay
+            setTimeout(() => {
+                if (document.hidden) return; // User left the page (app opened)
+                
+                // Optional: Show a message or redirect to app store
+                alert('App not installed. Please install the app first.');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
